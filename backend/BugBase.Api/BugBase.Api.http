@@ -1,0 +1,6 @@
+@BugBase.Api_HostAddress = http://localhost:5098
+
+GET {{BugBase.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
