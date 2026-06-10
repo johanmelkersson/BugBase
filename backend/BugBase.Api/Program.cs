@@ -38,10 +38,6 @@ var app = builder.Build();
 
 // --- Middleware pipeline ---
 
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers(); // Maps controller routes (e.g. /api/auth/register → AuthController.Register)
-
 // Expose the OpenAPI spec only in development (not in production)
 if (app.Environment.IsDevelopment())
 {
@@ -50,5 +46,9 @@ if (app.Environment.IsDevelopment())
 
 // Redirect HTTP requests to HTTPS
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers(); // Maps controller routes (e.g. /api/auth/register → AuthController.Register)
 
 app.Run();

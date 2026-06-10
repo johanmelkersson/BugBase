@@ -30,7 +30,8 @@ public class AuthService : IAuthService
             LastName = registerDto.LastName,
             Email = registerDto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-            Role = registerDto.Role
+            Role = UserRole.Reporter, // Default role for new users
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.Users.Add(user);
