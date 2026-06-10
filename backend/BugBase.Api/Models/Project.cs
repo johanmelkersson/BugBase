@@ -10,7 +10,7 @@ public class Project
     public int CreatedBy { get; set; } // FK → Users
 
     // Reference navigation — the user who created this project
-    public User CreatedByUser { get; set; }
+    public User CreatedByUser { get; set; } = null!;
 
     // Collection navigations
     public ICollection<Issue> CreatedIssues { get; set; } = new List<Issue>();

@@ -9,6 +9,6 @@ public class Comment
     public DateTime CreatedAt { get; set; }
 
     // Reference navigations
-    public Issue Issue { get; set; }
-    public User User { get; set; }
+    public Issue Issue { get; set; } = null!;
+    public User User { get; set; } = null!;
 }

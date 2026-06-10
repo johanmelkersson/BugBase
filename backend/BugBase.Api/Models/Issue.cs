@@ -34,8 +34,8 @@ public class Issue
 
     // Reference navigations
     // Note: two FKs to the same table (Users) — requires explicit Fluent API config in AppDbContext
-    public Project Project { get; set; }
-    public User ReportedByUser { get; set; }
+    public Project Project { get; set; } = null!;
+    public User ReportedByUser { get; set; } = null!;
     public User? AssignedToUser { get; set; } // Nullable — matches AssignedTo (int?)
 
     // Collection navigation
