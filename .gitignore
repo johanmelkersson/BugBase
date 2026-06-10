@@ -430,3 +430,6 @@ FodyWeavers.xsd
 
 # Local — not for repo
 _local/
+
+# ASP.NET Core local secrets
+appsettings.Development.json
