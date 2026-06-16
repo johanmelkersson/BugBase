@@ -1,3 +1,4 @@
+namespace BugBase.Api.Models;
 
 // Junction table — links users to the projects they are members of.
 // No own ID; the primary key is the combination of ProjectId + UserId (configured in AppDbContext).

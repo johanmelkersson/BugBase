@@ -1,3 +1,4 @@
+namespace BugBase.Api.Models;
 
 // Tracks the lifecycle of an issue: Open → InProgress → Review → Closed
 // Stored as a string in the database (configured in AppDbContext) for readability

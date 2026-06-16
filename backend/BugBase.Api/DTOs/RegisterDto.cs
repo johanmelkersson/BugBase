@@ -1,3 +1,5 @@
+namespace BugBase.Api.DTOs;
+
 public class RegisterDto
 {
     public string FirstName { get; set; } = string.Empty;

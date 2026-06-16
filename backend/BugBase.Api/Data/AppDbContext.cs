@@ -1,4 +1,7 @@
+using BugBase.Api.Models;          // User, Project, Issue, Comment, ProjectMember
 using Microsoft.EntityFrameworkCore;
+
+namespace BugBase.Api.Data;
 
 // The main database context — EF Core uses this class to interact with PostgreSQL.
 // DbSet properties map to database tables.
@@ -16,6 +19,12 @@ public class AppDbContext : DbContext
     // Called once on startup — EF Core builds and caches the model from these instructions
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+        modelBuilder.Entity<Project>()
+            .HasOne(p => p.CreatedByUser)
+            .WithMany(u => u.CreatedProjects)
+            .HasForeignKey(p => p.CreatedBy);
+
         // ProjectMember has no own ID — primary key is the combination of both FK columns
         modelBuilder.Entity<ProjectMember>()
             .HasKey(pm => new { pm.ProjectId, pm.UserId });

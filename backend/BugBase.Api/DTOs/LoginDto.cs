@@ -1,3 +1,4 @@
+namespace BugBase.Api.DTOs;
 
 public class LoginDto
 {

@@ -1,3 +1,4 @@
+namespace BugBase.Api.Models;
 
 // Defines the three access levels in BugBase
 public enum UserRole

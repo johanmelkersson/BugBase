@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using BugBase.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
+using BugBase.Api.Services;
+using BugBase.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

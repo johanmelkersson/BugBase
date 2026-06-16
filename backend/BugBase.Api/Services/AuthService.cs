@@ -4,6 +4,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
+using BugBase.Api.Data;    // AppDbContext
+using BugBase.Api.DTOs;    // AuthResponseDto, RegisterDto, LoginDto
+using BugBase.Api.Models;  // User, UserRole
+
 namespace BugBase.Api.Services;
 
 public class AuthService : IAuthService 

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+
 using BugBase.Api.Services;
+using BugBase.Api.DTOs;    // RegisterDto, LoginDto
 
 namespace BugBase.Api.Controllers;
 

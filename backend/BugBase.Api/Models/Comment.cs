@@ -1,3 +1,4 @@
+namespace BugBase.Api.Models;
 
 // Represents a comment posted on an issue
 public class Comment

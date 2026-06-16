@@ -1,3 +1,5 @@
+using BugBase.Api.DTOs;
+
 namespace BugBase.Api.Services;
 
 public interface IAuthService

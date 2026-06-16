@@ -1,4 +1,4 @@
-
+namespace BugBase.Api.Models;
 
 // Represents a project that groups related issues together
 public class Project
