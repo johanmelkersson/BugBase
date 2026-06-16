@@ -1,32 +1,6 @@
 @baseUrl = http://localhost:5098
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwidW5pcXVlX25hbWUiOiJ0ZXN0MkB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlJlcG9ydGVyIiwiZXhwIjoxNzgxNTM4NDQzLCJpc3MiOiJCdWdCYXNlQXBpIiwiYXVkIjoiQnVnQmFzZUNsaWVudCJ9.4D_d9hCyxY07ffvUsP64FVlYZbbitEMrmRIptVYpogs
-### Login
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwidW5pcXVlX25hbWUiOiJ0ZXN0MkB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlJlcG9ydGVyIiwiZXhwIjoxNzgxNjE5NTIyLCJpc3MiOiJCdWdCYXNlQXBpIiwiYXVkIjoiQnVnQmFzZUNsaWVudCJ9.Dcc2FjBbsKH-d1vPc_qk6Z-SUw9wBuIV7yExbbN5jb8
 
-//{
-//  "email": "test@test.com",
-//  "password": "Test123!"
-//}
-
-{
-  "email": "test2@test.com",
-  "password": "Test123!"
-}
-
-### Get all projects (requires token)
-GET {{baseUrl}}/api/project
-Authorization: Bearer {{token}}
-
-### Create project (requires token)
-POST {{baseUrl}}/api/project
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "name": "Test Project",
-  "description": "Ett testprojekt"
-}
 
 ### Register
 POST {{baseUrl}}/api/auth/register
@@ -38,3 +12,72 @@ Content-Type: application/json
   "email": "test2@test.com",
   "password": "Test123!"
 }
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test2@test.com",
+  "password": "Test123!"
+}
+//{
+//  "email": "test@test.com",
+//  "password": "Test123!"
+//}
+
+
+
+
+
+### Create project (requires token)
+POST {{baseUrl}}/api/project
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Test Project",
+  "description": "Ett testprojekt"
+}
+
+### Get all projects (requires token)
+GET {{baseUrl}}/api/project
+Authorization: Bearer {{token}}
+
+
+
+
+### Create issue (requires token)
+POST {{baseUrl}}/api/issue
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "projectId": 5,
+  "title": "Test issue",
+  "description": "En testissue",
+  "priority": 2
+}
+
+
+### Get all issues (requires token)
+GET {{baseUrl}}/api/issue
+Authorization: Bearer {{token}}
+
+### Get issue by id (requires token)
+GET {{baseUrl}}/api/issue/4
+Authorization: Bearer {{token}}
+
+### Update issue (requires token)
+PUT {{baseUrl}}/api/issue/4
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status": 2
+}
+
+
+### Delete issue (requires token)
+DELETE {{baseUrl}}/api/issue/4
+Authorization: Bearer {{token}}

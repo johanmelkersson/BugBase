@@ -20,11 +20,11 @@ public class ProjectService : IProjectService
         var projects = await _context.Projects.ToListAsync();
         return projects.Select(p => new ProjectResponseDto
         {
-            ProjectId = p.ProjectId,
-            Name = p.Name,
-            Description = p.Description,
-            CreatedAt = p.CreatedAt,
-            CreatedBy = p.CreatedBy
+            ProjectId =     p.ProjectId,
+            Name =          p.Name,
+            Description =   p.Description,
+            CreatedAt =     p.CreatedAt,
+            CreatedBy =     p.CreatedBy
         });
     }
 
@@ -35,11 +35,11 @@ public class ProjectService : IProjectService
 
         return new ProjectResponseDto
         {
-            ProjectId = project.ProjectId,
-            Name = project.Name,
-            Description = project.Description,
-            CreatedAt = project.CreatedAt,
-            CreatedBy = project.CreatedBy
+            ProjectId =     project.ProjectId,
+            Name =          project.Name,
+            Description =   project.Description,
+            CreatedAt =     project.CreatedAt,
+            CreatedBy =     project.CreatedBy
         };
     }
 
@@ -47,10 +47,10 @@ public class ProjectService : IProjectService
     {
         var project = new Project
         {
-            Name = createProjectDto.Name,
-            Description = createProjectDto.Description,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = userId
+            Name =          createProjectDto.Name,
+            Description =   createProjectDto.Description,
+            CreatedAt =     DateTime.UtcNow,
+            CreatedBy =     userId
         };
 
         _context.Projects.Add(project);
@@ -58,11 +58,11 @@ public class ProjectService : IProjectService
 
         return new ProjectResponseDto
         {
-            ProjectId = project.ProjectId,
-            Name = project.Name,
-            Description = project.Description,
-            CreatedAt = project.CreatedAt,
-            CreatedBy = project.CreatedBy
+            ProjectId =     project.ProjectId,
+            Name =          project.Name,
+            Description =   project.Description,
+            CreatedAt =     project.CreatedAt,
+            CreatedBy =     project.CreatedBy
         };
     }
 
@@ -81,11 +81,11 @@ public class ProjectService : IProjectService
 
         return new ProjectResponseDto
         {
-            ProjectId = project.ProjectId,
-            Name = project.Name,
-            Description = project.Description,
-            CreatedAt = project.CreatedAt,
-            CreatedBy = project.CreatedBy
+            ProjectId =     project.ProjectId,
+            Name =          project.Name,
+            Description =   project.Description,
+            CreatedAt =     project.CreatedAt,
+            CreatedBy =     project.CreatedBy
         };
     }
 

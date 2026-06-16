@@ -18,14 +18,14 @@ public class ProjectController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllProjectsAsync()
+    public async Task<IActionResult> GetAllAsync()
     {
         var projects = await _projectService.GetAllAsync();
         return Ok(projects);
     }
  
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetProjectById (int id)
+    public async Task<IActionResult> GetByIdAsync(int id)
     {
         var project = await _projectService.GetByIdAsync(id);
         if (project == null) return NotFound();
@@ -33,15 +33,15 @@ public class ProjectController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateProjectAsync([FromBody] CreateProjectDto createProjectDto)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateProjectDto createProjectDto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var project = await _projectService.CreateAsync(createProjectDto, userId);
-        return CreatedAtAction(nameof(GetProjectById), new { id = project.ProjectId }, project);
+        return CreatedAtAction(nameof(GetByIdAsync), new { id = project.ProjectId }, project);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProjectAsync(int id, [FromBody] UpdateProjectDto updateProjectDto)
+    public async Task<IActionResult> UpdateAsync(int id, [FromBody] UpdateProjectDto updateProjectDto)
     {
         var updatedProject = await _projectService.UpdateAsync(id, updateProjectDto);
         if (updatedProject == null) return NotFound();
@@ -49,13 +49,11 @@ public class ProjectController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProjectAsync(int id)
+    public async Task<IActionResult> DeleteAsync(int id)
     {
         var deletedProject = await _projectService.DeleteAsync(id);
         if (!deletedProject) return NotFound();
         return NoContent();
     }
-
-    // Implement API endpoints for projects here (e.g., GET /api/projects, POST /api/projects, etc.)
 }
 
