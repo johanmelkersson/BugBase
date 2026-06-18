@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:5098
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwidW5pcXVlX25hbWUiOiJ0ZXN0MkB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlJlcG9ydGVyIiwiZXhwIjoxNzgxNjE5NTIyLCJpc3MiOiJCdWdCYXNlQXBpIiwiYXVkIjoiQnVnQmFzZUNsaWVudCJ9.Dcc2FjBbsKH-d1vPc_qk6Z-SUw9wBuIV7yExbbN5jb8
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwidW5pcXVlX25hbWUiOiJ0ZXN0M0B0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlJlcG9ydGVyIiwiZXhwIjoxNzgxNjk5MzM0LCJpc3MiOiJCdWdCYXNlQXBpIiwiYXVkIjoiQnVnQmFzZUNsaWVudCJ9.ZuvZwf6jc4iyCnpDJcFT6AB9Plh9QxAxx_tNmd8dbGs
 
 
 ### Register
@@ -7,9 +7,8 @@ POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
-  "firstName": "Johan",
-  "lastName": "Melkersson",
-  "email": "test2@test.com",
+  "username": "Johan",
+  "email": "test3@test.com",
   "password": "Test123!"
 }
 
@@ -18,7 +17,7 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "test2@test.com",
+  "email": "test3@test.com",
   "password": "Test123!"
 }
 //{
@@ -79,5 +78,5 @@ Authorization: Bearer {{token}}
 
 
 ### Delete issue (requires token)
-DELETE {{baseUrl}}/api/issue/4
+DELETE {{baseUrl}}/api/issue/3
 Authorization: Bearer {{token}}

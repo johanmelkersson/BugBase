@@ -18,9 +18,9 @@ public class IssueController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<IssueResponseDto>>> GetAllAsync()
-    {
-        var issues = await _issueService.GetAllAsync();
+    public async Task<ActionResult<IEnumerable<IssueResponseDto>>> GetAllAsync([FromQuery] int? projectId)
+    {    
+        var issues = await _issueService.GetAllAsync(projectId);
         return Ok(issues);
     }
 
@@ -43,16 +43,24 @@ public class IssueController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<IssueResponseDto>> UpdateAsync(int id, UpdateIssueDto updateIssueDto)
     {
-        var issue = await _issueService.UpdateAsync(id, updateIssueDto);
-        if (issue == null) return NotFound();
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
+
+        var (status, issue) = await _issueService.UpdateAsync(id, updateIssueDto, userId, userRole);
+        if (status == ServiceResultStatus.NotFound) return NotFound();
+        if (status == ServiceResultStatus.Forbidden) return Forbid();
         return Ok(issue);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        var deletedIssue = await _issueService.DeleteAsync(id);
-        if (!deletedIssue) return NotFound();
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
+        
+        var status = await _issueService.DeleteAsync(id, userId, userRole);
+        if (status == ServiceResultStatus.NotFound) return NotFound();
+        if (status == ServiceResultStatus.Forbidden) return Forbid();
         return NoContent();
     }
 }

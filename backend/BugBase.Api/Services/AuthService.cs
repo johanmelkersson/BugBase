@@ -30,8 +30,7 @@ public class AuthService : IAuthService
         // Create new user
         var user = new User
         {
-            FirstName = registerDto.FirstName,
-            LastName = registerDto.LastName,
+            Username = registerDto.Username,
             Email = registerDto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
             Role = UserRole.Reporter, // Default role for new users
@@ -44,7 +43,12 @@ public class AuthService : IAuthService
         // Generate JWT token
         var token = GenerateJwtToken(user);
 
-        return new AuthResponseDto { Token = token };
+        return new AuthResponseDto
+        {
+            Token = token,
+            Username = user.Username,
+            Role = user.Role.ToString()
+        };
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
@@ -54,7 +58,13 @@ public class AuthService : IAuthService
             throw new Exception("Invalid email or password.");
 
         var token = GenerateJwtToken(user);
-        return new AuthResponseDto { Token = token };
+        
+        return new AuthResponseDto
+        {
+            Token = token,
+            Username = user.Username,
+            Role = user.Role.ToString()
+        };
     }
 
 

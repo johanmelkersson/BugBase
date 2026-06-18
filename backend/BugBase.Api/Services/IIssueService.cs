@@ -4,9 +4,9 @@ namespace BugBase.Api.Services;
 
 public interface IIssueService
 {
-    Task<IEnumerable<IssueResponseDto>> GetAllAsync();
+    Task<IEnumerable<IssueResponseDto>> GetAllAsync(int? projectID);
     Task<IssueResponseDto?> GetByIdAsync(int id);
     Task<IssueResponseDto> CreateAsync(CreateIssueDto createIssueDto, int userId);
-    Task<IssueResponseDto?> UpdateAsync(int id, UpdateIssueDto updateIssueDto);
-    Task<bool> DeleteAsync(int id);
+    Task<(ServiceResultStatus Status, IssueResponseDto? Issue)> UpdateAsync(int id, UpdateIssueDto updateIssueDto, int userId, string userRole);
+    Task<ServiceResultStatus> DeleteAsync(int id, int userId, string userRole);
 }

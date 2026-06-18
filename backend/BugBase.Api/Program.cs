@@ -1,7 +1,8 @@
+using System.Security.Claims;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 using BugBase.Api.Services;
 using BugBase.Api.Data;
@@ -20,6 +21,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            RoleClaimType = ClaimTypes.Role,
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
@@ -38,6 +40,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // --- Middleware pipeline ---
@@ -47,6 +57,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseCors("AllowFrontend");
 
 // Redirect HTTP requests to HTTPS
 app.UseHttpsRedirection();

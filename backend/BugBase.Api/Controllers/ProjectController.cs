@@ -7,7 +7,7 @@ using BugBase.Api.DTOs;
 
 namespace BugBase.Api.Controllers;
 
-[ApiController] [Route("api/[controller]")][Authorize]
+[ApiController][Route("api/[controller]")][Authorize]
 public class ProjectController : ControllerBase
 {
     private readonly IProjectService _projectService;
@@ -32,15 +32,15 @@ public class ProjectController : ControllerBase
         return Ok(project);
     }
 
-    [HttpPost]
+    [HttpPost][Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateProjectDto createProjectDto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var project = await _projectService.CreateAsync(createProjectDto, userId);
-        return CreatedAtAction(nameof(GetByIdAsync), new { id = project.ProjectId }, project);
+        return Created($"/api/project/{project.ProjectId}", project);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id}")][Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateAsync(int id, [FromBody] UpdateProjectDto updateProjectDto)
     {
         var updatedProject = await _projectService.UpdateAsync(id, updateProjectDto);
@@ -48,7 +48,7 @@ public class ProjectController : ControllerBase
         return Ok(updatedProject);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}")][Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
         var deletedProject = await _projectService.DeleteAsync(id);

@@ -15,12 +15,16 @@ public class IssueService : IIssueService
         _context = context;
     }
 
-    public async Task<IEnumerable<IssueResponseDto>> GetAllAsync()
+    public async Task<IEnumerable<IssueResponseDto>> GetAllAsync(int? projectId)
     {
-        var issues = await _context.Issues
+        IQueryable<Issue> query  = _context.Issues
             .Include(i => i.ReportedByUser)
-            .Include(i => i.AssignedToUser)
-            .ToListAsync();
+            .Include(i => i.AssignedToUser);
+        
+        if (projectId.HasValue)
+            query  = query.Where(i => i.ProjectId == projectId.Value);
+
+        var issues = await query.ToListAsync();
 
         return issues.Select(i => new IssueResponseDto
         {
@@ -32,8 +36,8 @@ public class IssueService : IIssueService
             Priority =          i.Priority.ToString(),
             CreatedAt =         i.CreatedAt,
             UpdatedAt =         i.UpdatedAt,
-            ReportedByName =    $"{i.ReportedByUser.FirstName} {i.ReportedByUser.LastName}",
-            AssignedToName =    i.AssignedToUser != null ? $"{i.AssignedToUser.FirstName} {i.AssignedToUser.LastName}" : null
+            ReportedByName =    i.ReportedByUser.Username,
+            AssignedToName =    i.AssignedToUser?.Username
         });
     }
 
@@ -56,8 +60,8 @@ public class IssueService : IIssueService
             Priority =          issue.Priority.ToString(),
             CreatedAt =         issue.CreatedAt,
             UpdatedAt =         issue.UpdatedAt,
-            ReportedByName =    $"{issue.ReportedByUser.FirstName} {issue.ReportedByUser.LastName}",
-            AssignedToName =    issue.AssignedToUser != null ? $"{issue.AssignedToUser.FirstName} {issue.AssignedToUser.LastName}" : null
+            ReportedByName =    issue.ReportedByUser.Username,
+            AssignedToName =    issue.AssignedToUser?.Username
         };
     }
 
@@ -82,14 +86,18 @@ public class IssueService : IIssueService
         return await GetByIdAsync(issue.IssueId) ?? throw new Exception("Issue not found after creation");
     }
 
-    public async Task<IssueResponseDto?> UpdateAsync(int id, UpdateIssueDto updateIssueDto)
+    public async Task<(ServiceResultStatus Status, IssueResponseDto? Issue)> UpdateAsync(int id, UpdateIssueDto updateIssueDto, int userId, string userRole)
     {
         var issue = await _context.Issues
             .Include(i => i.ReportedByUser)
             .Include(i => i.AssignedToUser)
             .FirstOrDefaultAsync(i => i.IssueId == id);
+            
+        if (issue == null)
+            return (ServiceResultStatus.NotFound, null);
 
-        if (issue == null) return null;
+        if (userRole == "Reporter" && issue.ReportedBy != userId)
+            return (ServiceResultStatus.Forbidden, null);
 
         if (updateIssueDto.Title != null) issue.Title = updateIssueDto.Title;
         if (updateIssueDto.Description != null) issue.Description = updateIssueDto.Description;
@@ -100,7 +108,7 @@ public class IssueService : IIssueService
 
         await _context.SaveChangesAsync();
 
-        return new IssueResponseDto
+        return (ServiceResultStatus.Success, new IssueResponseDto
         {
             IssueId =           issue.IssueId,
             ProjectId =         issue.ProjectId,
@@ -110,18 +118,23 @@ public class IssueService : IIssueService
             Priority =          issue.Priority.ToString(),
             CreatedAt =         issue.CreatedAt,
             UpdatedAt =         issue.UpdatedAt,
-            ReportedByName =    $"{issue.ReportedByUser.FirstName} {issue.ReportedByUser.LastName}",
-            AssignedToName =    issue.AssignedToUser != null ? $"{issue.AssignedToUser.FirstName} {issue.AssignedToUser.LastName}" : null
-        };
+            ReportedByName =    issue.ReportedByUser.Username,
+            AssignedToName =    issue.AssignedToUser?.Username
+        });
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<ServiceResultStatus> DeleteAsync(int id, int userId, string userRole)
     {
         var issue = await _context.Issues.FindAsync(id);
-        if (issue == null) return false;
+        
+        if (issue == null)
+            return ServiceResultStatus.NotFound;
+
+        if (userRole == "Reporter" || (userRole == "Developer" && issue.ReportedBy != userId))
+            return ServiceResultStatus.Forbidden;
 
         _context.Issues.Remove(issue);
         await _context.SaveChangesAsync();
-        return true;
+        return ServiceResultStatus.Success;
     }
 }
