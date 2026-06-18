@@ -6,10 +6,8 @@ namespace BugBase.Api.Data;
 // The main database context — EF Core uses this class to interact with PostgreSQL.
 // DbSet properties map to database tables.
 // OnModelCreating configures relationships that EF Core can't infer automatically.
-public class AppDbContext : DbContext
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
     public DbSet<User> Users { get; set; }
     public DbSet<Project> Projects { get; set; }
     public DbSet<Issue> Issues { get; set; }

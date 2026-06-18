@@ -10,16 +10,10 @@ using BugBase.Api.Models;  // User, UserRole
 
 namespace BugBase.Api.Services;
 
-public class AuthService : IAuthService 
+public class AuthService(AppDbContext context, IConfiguration configuration) : IAuthService 
 {
-    private readonly AppDbContext _context;
-    private readonly IConfiguration _configuration;
-
-    public AuthService(AppDbContext context, IConfiguration configuration)
-    {
-        _context = context;
-        _configuration = configuration;
-    }
+    private readonly AppDbContext _context = context;
+    private readonly IConfiguration _configuration = configuration;
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
     {

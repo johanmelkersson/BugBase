@@ -8,43 +8,36 @@ using BugBase.Api.DTOs;
 namespace BugBase.Api.Controllers;
 
 [ApiController] [Route("api/[controller]")] [Authorize]
-public class IssueController(IIssueService issueService) : ControllerBase
+public class CommentController(ICommentService commentService) : ControllerBase
 {
-    private readonly IIssueService _issueService = issueService;
+    private readonly ICommentService _commentService = commentService;
 
     [HttpGet]
-    public async Task<ActionResult<List<IssueResponseDto>>> GetAllAsync([FromQuery] int? projectId)
+    public async Task<ActionResult<List<CommentResponseDto>>> GetAllByIssueAsync ([FromQuery] int issueId)
     {    
-        var issues = await _issueService.GetAllAsync(projectId);
-        return Ok(issues);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<IssueResponseDto>> GetByIdAsync(int id)
-    {
-        var issue = await _issueService.GetByIdAsync(id);
-        if (issue == null) return NotFound();
-        return Ok(issue);
+        var comment = await _commentService.GetAllByIssueAsync(issueId);
+        return Ok(comment);
     }
 
     [HttpPost]
-    public async Task<ActionResult<IssueResponseDto>> CreateAsync(CreateIssueDto createIssueDto)
+    public async Task<ActionResult<CommentResponseDto>> CreateAsync(CreateCommentDto dto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var issue = await _issueService.CreateAsync(createIssueDto, userId);
-        return Created($"/api/issue/{issue.Id}", issue);
+        var comment = await _commentService.CreateAsync(userId, dto);
+        return Created($"/api/comment/{comment.Id}", comment);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<IssueResponseDto>> UpdateAsync(int id, UpdateIssueDto updateIssueDto)
+    public async Task<ActionResult<CommentResponseDto>> UpdateAsync(int id, UpdateCommentDto dto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var userRole = User.FindFirstValue(ClaimTypes.Role)!;
 
-        var (status, issue) = await _issueService.UpdateAsync(id, updateIssueDto, userId, userRole);
+        var (status, comment) = await _commentService.UpdateAsync(id, dto, userId, userRole);
         if (status == ServiceResultStatus.NotFound) return NotFound();
         if (status == ServiceResultStatus.Forbidden) return Forbid();
-        return Ok(issue);
+        if (status == ServiceResultStatus.BadRequest) return BadRequest();
+        return Ok(comment);
     }
 
     [HttpDelete("{id}")]
@@ -53,7 +46,7 @@ public class IssueController(IIssueService issueService) : ControllerBase
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var userRole = User.FindFirstValue(ClaimTypes.Role)!;
         
-        var status = await _issueService.DeleteAsync(id, userId, userRole);
+        var status = await _commentService.DeleteAsync(id, userId, userRole);
         if (status == ServiceResultStatus.NotFound) return NotFound();
         if (status == ServiceResultStatus.Forbidden) return Forbid();
         return NoContent();

@@ -16,7 +16,7 @@ export default function DashboardPage() {
         {projects.map(project => (
             <div key={project.id}>     
             <Link to={`/projects/${project.id}`}>
-              <h2>{project.title}</h2>
+              <h2>{project.name}</h2>
             </Link>
             <p>{project.description}</p>
             <p>Created by: {project.createdBy}</p>

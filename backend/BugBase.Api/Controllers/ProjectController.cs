@@ -8,14 +8,9 @@ using BugBase.Api.DTOs;
 namespace BugBase.Api.Controllers;
 
 [ApiController][Route("api/[controller]")][Authorize]
-public class ProjectController : ControllerBase
+public class ProjectController(IProjectService projectService) : ControllerBase
 {
-    private readonly IProjectService _projectService;
-
-    public ProjectController(IProjectService projectService)
-    {
-        _projectService = projectService;
-    }
+    private readonly IProjectService _projectService = projectService;
 
     [HttpGet]
     public async Task<IActionResult> GetAllAsync()
@@ -37,7 +32,7 @@ public class ProjectController : ControllerBase
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var project = await _projectService.CreateAsync(createProjectDto, userId);
-        return Created($"/api/project/{project.ProjectId}", project);
+        return Created($"/api/project/{project.Id}", project);
     }
 
     [HttpPut("{id}")][Authorize(Roles = "Admin")]

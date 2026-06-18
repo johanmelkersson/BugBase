@@ -6,18 +6,13 @@ using BugBase.Api.Models;
 
 namespace BugBase.Api.Services;
 
-public class IssueService : IIssueService
+public class IssueService(AppDbContext context) : IIssueService
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context = context;
 
-    public IssueService(AppDbContext context)
+    public async Task<List<IssueResponseDto>> GetAllAsync(int? projectId)
     {
-        _context = context;
-    }
-
-    public async Task<IEnumerable<IssueResponseDto>> GetAllAsync(int? projectId)
-    {
-        IQueryable<Issue> query  = _context.Issues
+        IQueryable<Issue> query = _context.Issues
             .Include(i => i.ReportedByUser)
             .Include(i => i.AssignedToUser);
         
@@ -26,9 +21,9 @@ public class IssueService : IIssueService
 
         var issues = await query.ToListAsync();
 
-        return issues.Select(i => new IssueResponseDto
+        return [.. issues.Select(i => new IssueResponseDto
         {
-            IssueId =           i.IssueId,
+            Id =                i.IssueId,
             ProjectId =         i.ProjectId,
             Title =             i.Title,
             Description =       i.Description,
@@ -38,7 +33,7 @@ public class IssueService : IIssueService
             UpdatedAt =         i.UpdatedAt,
             ReportedByName =    i.ReportedByUser.Username,
             AssignedToName =    i.AssignedToUser?.Username
-        });
+        })];
     }
 
     public async Task<IssueResponseDto?> GetByIdAsync(int id)
@@ -52,7 +47,7 @@ public class IssueService : IIssueService
 
         return new IssueResponseDto
         {
-            IssueId =           issue.IssueId,
+            Id =                issue.IssueId,
             ProjectId =         issue.ProjectId,
             Title =             issue.Title,
             Description =       issue.Description,
@@ -110,7 +105,7 @@ public class IssueService : IIssueService
 
         return (ServiceResultStatus.Success, new IssueResponseDto
         {
-            IssueId =           issue.IssueId,
+            Id =                issue.IssueId,
             ProjectId =         issue.ProjectId,
             Title =             issue.Title,
             Description =       issue.Description,

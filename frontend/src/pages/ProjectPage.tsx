@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { getAll } from '../api/issues';
 import type { Issue } from '../types';
-import { Link } from 'react-router-dom';
 
 export default function ProjectPage() {
     const { id } = useParams();

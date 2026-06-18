@@ -6,26 +6,21 @@ using BugBase.Api.Models;
 
 namespace BugBase.Api.Services;
 
-public class ProjectService : IProjectService
+public class ProjectService(AppDbContext context) : IProjectService
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context = context;
 
-    public ProjectService(AppDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<IEnumerable<ProjectResponseDto>> GetAllAsync()
+    public async Task<List<ProjectResponseDto>> GetAllAsync()
     {
         var projects = await _context.Projects.ToListAsync();
-        return projects.Select(p => new ProjectResponseDto
+        return [.. projects.Select(p => new ProjectResponseDto
         {
-            ProjectId =     p.ProjectId,
+            Id =            p.ProjectId,
             Name =          p.Name,
             Description =   p.Description,
             CreatedAt =     p.CreatedAt,
             CreatedBy =     p.CreatedBy
-        });
+        })];
     }
 
     public async Task<ProjectResponseDto?> GetByIdAsync(int id)
@@ -35,7 +30,7 @@ public class ProjectService : IProjectService
 
         return new ProjectResponseDto
         {
-            ProjectId =     project.ProjectId,
+            Id =            project.ProjectId,
             Name =          project.Name,
             Description =   project.Description,
             CreatedAt =     project.CreatedAt,
@@ -58,7 +53,7 @@ public class ProjectService : IProjectService
 
         return new ProjectResponseDto
         {
-            ProjectId =     project.ProjectId,
+            Id =            project.ProjectId,
             Name =          project.Name,
             Description =   project.Description,
             CreatedAt =     project.CreatedAt,
@@ -81,7 +76,7 @@ public class ProjectService : IProjectService
 
         return new ProjectResponseDto
         {
-            ProjectId =     project.ProjectId,
+            Id =            project.ProjectId,
             Name =          project.Name,
             Description =   project.Description,
             CreatedAt =     project.CreatedAt,

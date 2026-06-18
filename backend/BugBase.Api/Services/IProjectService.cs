@@ -4,7 +4,7 @@ namespace BugBase.Api.Services;
 
 public interface IProjectService
 {
-    Task<IEnumerable<ProjectResponseDto>> GetAllAsync();
+    Task<List<ProjectResponseDto>> GetAllAsync();
     Task<ProjectResponseDto?> GetByIdAsync(int id);
     Task<ProjectResponseDto> CreateAsync(CreateProjectDto createProjectDto, int userId);
     Task<ProjectResponseDto?> UpdateAsync(int id, UpdateProjectDto updateProjectDto);

@@ -8,7 +8,7 @@ export interface User {
 
 export interface Project {
   id: number;
-  title: string;
+  name: string;
   description: string;
   createdAt: Date;
   createdBy: number;
@@ -33,4 +33,17 @@ export interface UpdateIssue {
   status?: string;
   priority?: string;
   assignedTo?: number | null;
+}
+
+export interface Comment {
+  id: number;
+  issueId: number;
+  content: string;
+  authorName: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UpdateComment {
+  content?: string;
 }

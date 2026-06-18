@@ -6,5 +6,6 @@ public enum ServiceResultStatus
 {
     Success,
     NotFound,
-    Forbidden 
+    Forbidden,
+    BadRequest 
 }
