@@ -32,28 +32,58 @@ export default function AdminPage() {
     }
 
     return (
-        <div>
-            <h1>Projekt</h1>
-            {projects.map(project => (
-                <div key={project.id}>
-                    <h2>{project.name}</h2>
-                    <p>{project.description}</p>
-                    <p>Created by: {project.createdBy}</p>
-                    <p>Date: {new Date(project.createdAt).toLocaleDateString()}</p>
-                    <button onClick={() => handleDelete(project.id)} type="button">Delete project</button>
+        <div className="flex flex-col gap-10">
+
+            {/* Projects */}
+            <div>
+                <h1 className="text-2xl font-semibold text-white mb-4">Projekt</h1>
+                <div className="flex flex-col gap-2">
+                    {projects.map(project => (
+                        <div key={project.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">{project.name}</p>
+                                <p className="text-gray-500 text-xs mt-0.5 truncate">{project.description}</p>
+                            </div>
+                            <div className="flex items-center gap-4 shrink-0 text-xs text-gray-500">
+                                <span>{project.createdBy}</span>
+                                <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+                                <button
+                                    onClick={() => handleDelete(project.id)}
+                                    type="button"
+                                    className="text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-lg px-3 py-1.5 transition-colors"
+                                >
+                                    Ta bort
+                                </button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            ))}
-            <h1>Användare</h1>
-            {users.map(user => (
-                <div key={user.id}>
-                    <p>{user.username} — {user.email}</p>
-                    <select value={user.role} onChange={r => handleRoleChange(user.id, r.target.value)}>
-                        <option value="Admin">Admin</option>
-                        <option value="Developer">Developer</option>
-                        <option value="Reporter">Reporter</option>
-                    </select>
+            </div>
+
+            {/* Users */}
+            <div>
+                <h1 className="text-2xl font-semibold text-white mb-4">Användare</h1>
+                <div className="flex flex-col gap-2">
+                    {users.map(user => (
+                        <div key={user.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-white text-sm font-medium">{user.username}</p>
+                                <p className="text-gray-500 text-xs mt-0.5">{user.email}</p>
+                            </div>
+                            <select
+                                value={user.role}
+                                onChange={r => handleRoleChange(user.id, r.target.value)}
+                                className="bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                            >
+                                <option value="Admin">Admin</option>
+                                <option value="Developer">Developer</option>
+                                <option value="Reporter">Reporter</option>
+                            </select>
+                        </div>
+                    ))}
                 </div>
-            ))}
-        </div >
+            </div>
+
+        </div>
     );
 }
