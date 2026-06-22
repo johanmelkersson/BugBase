@@ -1,7 +1,7 @@
 import client from './client';
 import type { Project } from '../types';
 
-export async function getAll(): Promise<Project[]> {
+export async function getProjects(): Promise<Project[]> {
     const response = await client.get('/api/project');
     return response.data;
 }
@@ -9,4 +9,8 @@ export async function getAll(): Promise<Project[]> {
 export async function create(name: string, description: string): Promise<Project> {
     const response = await client.post('/api/project', { name, description });
     return response.data;
+}
+
+export async function deleteProject(id: number): Promise<void> {
+    await client.delete(`/api/project/${id}`);
 }

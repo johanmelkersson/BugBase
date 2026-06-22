@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAll } from '../api/projects';
+import { getProjects } from '../api/projects';
 import type { Project } from '../types';
 import { Link } from 'react-router-dom';
 
@@ -7,7 +7,7 @@ export default function DashboardPage() {
     const [projects, setProjects] = useState<Project[]>([]);
 
     useEffect(() => {
-        getAll().then(projects => setProjects(projects));
+        getProjects().then(projects => setProjects(projects));
     }, []);
 
     return (

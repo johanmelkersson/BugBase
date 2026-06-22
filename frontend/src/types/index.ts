@@ -1,4 +1,3 @@
-
 export interface User {
   id: number;
   username: string;
@@ -25,6 +24,12 @@ export interface Issue {
   assignedToName : string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface CreateIssue {
+  title: string;
+  description: string;
+  priority: string;
 }
 
 export interface UpdateIssue {

@@ -11,7 +11,7 @@ export async function getById(id: number): Promise<Issue> {
     return response.data;
 }
 
-export async function create(projectId: number, title: string, description: string, priority: number): Promise<Issue> {
+export async function create(projectId: number, title: string, description: string, priority: string): Promise<Issue> {
     const response = await client.post('/api/issue', { projectId, title, description, priority });
     return response.data;
 }
