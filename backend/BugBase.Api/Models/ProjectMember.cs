@@ -6,6 +6,7 @@ public class ProjectMember
 {
     public int ProjectId { get; set; } // FK → Projects
     public int UserId { get; set; }    // FK → Users
+    public ProjectMemberRole Role { get; set; }
 
     // Reference navigations — each row belongs to exactly one project and one user
     public Project Project { get; set; } = null!;

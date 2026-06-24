@@ -1,22 +1,7 @@
 namespace BugBase.Api.DTOs;
 
-public class CreateCommentDto
-{
-    public int IssueId { get; set; }
-    public string Content { get; set; } = string.Empty;
-}
+public record CreateCommentDto(int IssueId, string Content);
 
-public class UpdateCommentDto
-{
-    public string? Content { get; set; }
-}
+public record UpdateCommentDto(string? Content);
 
-public class CommentResponseDto
-{
-    public int Id { get; set; }
-    public int IssueId { get; set; }
-    public string Content { get; set; } = string.Empty;
-    public string AuthorName { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
+public record CommentResponseDto(int Id, int IssueId, string Content, int? AuthorId, string? AuthorName, DateTime CreatedAt, DateTime UpdatedAt);

@@ -1,40 +1,40 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ProjectProvider, useProject } from './context/ProjectContext';
 
-// Sidor importeras här när de finns
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
-import ProjectPage from './pages/ProjectPage';
-import IssuePage from './pages/IssuePage';
+import WorkspacePage from './pages/WorkspacePage';
 import PrivateRoute from './components/PrivateRoute';
-import AdminRoute from './components/AdminRoute';
-import AdminPage from './pages/AdminPage';
+import SettingsPage from './pages/SettingsPage';
+import CreateProjectModal from './components/CreateProjectModal';
+
+function ModalHost() {
+    const { showCreateModal } = useProject();
+    return showCreateModal ? <CreateProjectModal /> : null;
+}
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={ <LoginPage /> } />
-          <Route path="/register" element={ <RegisterPage /> } />
-          <Route element={<PrivateRoute />}>
-            <Route element={<AdminRoute />}>
-              <Route path="/admin" element={<AdminPage />} />
+        <ProjectProvider>
+          <ModalHost />
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/workspace" element={<WorkspacePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/projects/:id" element={<ProjectPage />} />
-            <Route path="/issues/:id" element={<IssuePage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+        </ProjectProvider>
       </AuthProvider>
     </BrowserRouter>
   );
 }
 
 export default App;
-
-
-
-

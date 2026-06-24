@@ -4,45 +4,38 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-using BugBase.Api.Data;    // AppDbContext
-using BugBase.Api.DTOs;    // AuthResponseDto, RegisterDto, LoginDto
-using BugBase.Api.Models;  // User, UserRole
+using BugBase.Api.Data;
+using BugBase.Api.DTOs;
+using BugBase.Api.Models;
 
 namespace BugBase.Api.Services;
 
-public class AuthService(AppDbContext context, IConfiguration configuration) : IAuthService 
+public class AuthService(AppDbContext context, IConfiguration configuration) : IAuthService
 {
     private readonly AppDbContext _context = context;
     private readonly IConfiguration _configuration = configuration;
 
+    public string GenerateToken(User user) => GenerateJwtToken(user);
+
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
     {
-        // Check if email already exists
         if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
             throw new Exception("Email already in use.");
 
-        // Create new user
         var user = new User
         {
             Username = registerDto.Username,
             Email = registerDto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-            Role = UserRole.Reporter, // Default role for new users
+            Role = UserRole.User,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Generate JWT token
         var token = GenerateJwtToken(user);
-
-        return new AuthResponseDto
-        {
-            Token = token,
-            Username = user.Username,
-            Role = user.Role.ToString()
-        };
+        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, null);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
@@ -52,15 +45,8 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
             throw new Exception("Invalid email or password.");
 
         var token = GenerateJwtToken(user);
-        
-        return new AuthResponseDto
-        {
-            Token = token,
-            Username = user.Username,
-            Role = user.Role.ToString()
-        };
+        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId);
     }
-
 
     private string GenerateJwtToken(User user)
     {

@@ -39,9 +39,7 @@ public class IssueController(IIssueService issueService) : ControllerBase
     public async Task<ActionResult<IssueResponseDto>> UpdateAsync(int id, UpdateIssueDto updateIssueDto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
-
-        var (status, issue) = await _issueService.UpdateAsync(id, updateIssueDto, userId, userRole);
+        var (status, issue) = await _issueService.UpdateAsync(id, updateIssueDto, userId);
         if (status == ServiceResultStatus.NotFound) return NotFound();
         if (status == ServiceResultStatus.Forbidden) return Forbid();
         return Ok(issue);
@@ -51,9 +49,7 @@ public class IssueController(IIssueService issueService) : ControllerBase
     public async Task<IActionResult> DeleteAsync(int id)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
-        
-        var status = await _issueService.DeleteAsync(id, userId, userRole);
+        var status = await _issueService.DeleteAsync(id, userId);
         if (status == ServiceResultStatus.NotFound) return NotFound();
         if (status == ServiceResultStatus.Forbidden) return Forbid();
         return NoContent();

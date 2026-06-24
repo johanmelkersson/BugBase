@@ -31,9 +31,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     public async Task<ActionResult<CommentResponseDto>> UpdateAsync(int id, UpdateCommentDto dto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
-
-        var (status, comment) = await _commentService.UpdateAsync(id, dto, userId, userRole);
+        var (status, comment) = await _commentService.UpdateAsync(id, dto, userId);
         if (status == ServiceResultStatus.NotFound) return NotFound();
         if (status == ServiceResultStatus.Forbidden) return Forbid();
         if (status == ServiceResultStatus.BadRequest) return BadRequest();
@@ -44,9 +42,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     public async Task<IActionResult> DeleteAsync(int id)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
-        
-        var status = await _commentService.DeleteAsync(id, userId, userRole);
+        var status = await _commentService.DeleteAsync(id, userId);
         if (status == ServiceResultStatus.NotFound) return NotFound();
         if (status == ServiceResultStatus.Forbidden) return Forbid();
         return NoContent();

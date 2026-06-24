@@ -4,6 +4,8 @@ export interface AuthResponse {
   token: string;
   username: string;
   role: string;
+  email: string;
+  currentProjectId: number | null;
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse> {

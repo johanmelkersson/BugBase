@@ -1,9 +1,19 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useProject } from '../context/ProjectContext';
+import { getProjects } from '../api/projects';
 import Navbar from './Navbar';
 
 export default function PrivateRoute() {
     const { auth } = useAuth();
+    const { setProjects } = useProject();
+
+    useEffect(() => {
+        if (auth) {
+            getProjects().then(setProjects);
+        }
+    }, [auth]);
 
     if (!auth) {
         return <Navigate to="/login" replace />;
@@ -12,9 +22,7 @@ export default function PrivateRoute() {
     return (
         <div className="min-h-screen bg-[#16171d]">
             <Navbar />
-            <main className="max-w-5xl mx-auto px-6 py-8">
-                <Outlet />
-            </main>
+            <Outlet />
         </div>
     );
 }

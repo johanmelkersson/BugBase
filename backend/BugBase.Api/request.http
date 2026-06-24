@@ -1,111 +1,150 @@
 @baseUrl = http://localhost:5098
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMCIsInVuaXF1ZV9uYW1lIjoidGVzdDFAdGVzdC50ZXN0IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUmVwb3J0ZXIiLCJleHAiOjE3ODE4MjYzNjgsImlzcyI6IkJ1Z0Jhc2VBcGkiLCJhdWQiOiJCdWdCYXNlQ2xpZW50In0.6iBgmKSG7Rpjo9h79W_8bz9jYL4Ayv5W9L44AgnvSOU
+@ownerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsInVuaXF1ZV9uYW1lIjoib3duZXJAdGVzdC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJVc2VyIiwiZXhwIjoxNzgyMTczNzA1LCJpc3MiOiJCdWdCYXNlQXBpIiwiYXVkIjoiQnVnQmFzZUNsaWVudCJ9.gP31APt0gSd1peEtjIZVfGfOPBIoz6Rayfgj_FASuwk
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInVuaXF1ZV9uYW1lIjoiZGV2QHRlc3QuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiVXNlciIsImV4cCI6MTc4MjE3MzcyNCwiaXNzIjoiQnVnQmFzZUFwaSIsImF1ZCI6IkJ1Z0Jhc2VDbGllbnQifQ.tPrlEZwgPueUdqpeGBwssaoVLMWUAljoxzikjrEIr5o
 
+### Register user 1 (becomes Owner)
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "Johan",
-  "email": "test3@test.com",
+  "username": "Owner",
+  "email": "owner@test.com",
   "password": "Test123!"
 }
 
-### Login
+### Register user 2 (will be invited)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "Developer1",
+  "email": "dev@test.com",
+  "password": "Test123!"
+}
+
+### Login as Owner
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "test1@test.test",
-  "password": "test"
+  "email": "owner@test.com",
+  "password": "Test123!"
 }
-//{
-//  "email": "test@test.com",
-//  "password": "Test123!"
-//}
 
+### Login as Developer1
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
 
+{
+  "email": "dev@test.com",
+  "password": "Test123!"
+}
 
-
-
-### Create project (requires token)
+### Create project (Owner)
 POST {{baseUrl}}/api/project
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
 {
   "name": "Test Project",
   "description": "Ett testprojekt"
 }
 
-### Get all projects (requires token)
+### Get projects (Owner — should see the project)
 GET {{baseUrl}}/api/project
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
+### Get projects (Developer1 — should see nothing yet)
+GET {{baseUrl}}/api/project
+Authorization: Bearer {{userToken}}
 
+### Search users by username
+GET {{baseUrl}}/api/user/search?username=dev
+Authorization: Bearer {{ownerToken}}
 
+### Send invitation (Owner invites Developer1, use id from search result)
+POST {{baseUrl}}/api/invitation
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "projectId": 19,
+  "invitedUserId": 13,
+  "role": "Developer"
+}
+
+### Get pending invitations (Developer1)
+GET {{baseUrl}}/api/invitation/pending
+Authorization: Bearer {{userToken}}
+
+### Accept invitation (Developer1, use id from pending result)
+PUT {{baseUrl}}/api/invitation/1/accept
+Authorization: Bearer {{userToken}}
+
+### Get projects (Developer1 — should now see the project)
+GET {{baseUrl}}/api/project
+Authorization: Bearer {{userToken}}
 
 ### Create issue (requires token)
 POST {{baseUrl}}/api/issue
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
 {
-  "projectId": 10,
+  "projectId": 1,
   "title": "Test issue",
   "description": "En testissue",
-  "priority": 2
+  "priority": "Low"
 }
 
+### Get all issues for project
+GET {{baseUrl}}/api/issue?projectId=1
+Authorization: Bearer {{ownerToken}}
 
-### Get all issues (requires token)
-GET {{baseUrl}}/api/issue
-Authorization: Bearer {{token}}
+### Get issue by id
+GET {{baseUrl}}/api/issue/1
+Authorization: Bearer {{ownerToken}}
 
-### Get issue by id (requires token)
-GET {{baseUrl}}/api/issue/6
-Authorization: Bearer {{token}}
-
-### Update issue (requires token)
-PUT {{baseUrl}}/api/issue/4
+### Update issue
+PUT {{baseUrl}}/api/issue/1
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
 {
-  "status": 2
+  "status": "InProgress"
 }
 
+### Delete issue
+DELETE {{baseUrl}}/api/issue/1
+Authorization: Bearer {{ownerToken}}
 
-### Delete issue (requires token)
-DELETE {{baseUrl}}/api/issue/3
-Authorization: Bearer {{token}}
+### Get comments by issueId
+GET {{baseUrl}}/api/comment?issueId=1
+Authorization: Bearer {{ownerToken}}
 
-
-
-### Get all comments by issueId (requires token)
-GET {{baseUrl}}/api/comment?issueId=6
-Authorization: Bearer {{token}}
-
-
-### Create comment (requires token)
+### Create comment
 POST {{baseUrl}}/api/comment
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
 {
-  "issueId": 6,
+  "issueId": 1,
   "content": "En testkommentar"
 }
 
-
-### Update comment (requires token)
-PUT {{baseUrl}}/api/comment/2
+### Update comment
+PUT {{baseUrl}}/api/comment/1
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
 {
   "content": "Uppdaterad kommentar"
 }
 
-### Delete comment (requires token)
-DELETE {{baseUrl}}/api/comment/2
-Authorization: Bearer {{token}}
+### Delete comment
+DELETE {{baseUrl}}/api/comment/1
+Authorization: Bearer {{ownerToken}}
+
+### Delete project (Owner only)
+DELETE {{baseUrl}}/api/project/1
+Authorization: Bearer {{ownerToken}}

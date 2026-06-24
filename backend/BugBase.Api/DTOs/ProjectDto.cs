@@ -1,22 +1,11 @@
 namespace BugBase.Api.DTOs;
 
-public class CreateProjectDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-}
+public record CreateProjectDto(string Name, string Description);
 
-public class UpdateProjectDto
-{
-    public string? Name { get; set; } = string.Empty;
-    public string? Description { get; set; } = string.Empty;
-}
+public record UpdateProjectDto(string? Name, string? Description);
 
-public class ProjectResponseDto
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public int CreatedBy { get; set; }
-}
+public record ProjectResponseDto(int Id, string Name, string Description, DateTime CreatedAt, int CreatedBy);
+
+public record ProjectMemberDto(int Id, string Username, string Role);
+
+public record UpdateMemberRoleDto(string Role);

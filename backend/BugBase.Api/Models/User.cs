@@ -3,9 +3,8 @@ namespace BugBase.Api.Models;
 // Defines the three access levels in BugBase
 public enum UserRole
 {
-    Admin,      // Full access — manage users, projects, and issues
-    Developer,  // Can be assigned to issues and update their status
-    Reporter    // Can create and comment on issues
+    Admin,
+    User
 }
 
 // Represents a registered user in the system
@@ -17,6 +16,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty; // Stored as a bcrypt hash, never plaintext
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int? CurrentProjectId { get; set; }
 
     // Collection navigations — used by EF Core to load related data via .Include()
     public ICollection<Project> CreatedProjects { get; set; } = new List<Project>();

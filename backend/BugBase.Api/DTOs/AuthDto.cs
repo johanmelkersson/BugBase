@@ -1,22 +1,11 @@
 namespace BugBase.Api.DTOs;
 
+public record RegisterDto(string Username, string Email, string Password);
 
-public class RegisterDto
-{
-    public string Username { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
+public record LoginDto(string Email, string Password);
 
-public class LoginDto
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
+public record UpdateProfileDto(string? Username, string? Email, string? Password, string? Role, string? CurrentPassword);
 
-public class AuthResponseDto
-{
-    public string Token { get; set; } = string.Empty;
-    public string Username { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
-}
+public record AuthResponseDto(string Token, string Username, string Role, string Email, int? CurrentProjectId);
+
+public record SetCurrentProjectDto(int? ProjectId);

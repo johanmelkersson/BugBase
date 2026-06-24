@@ -14,26 +14,19 @@ public class IssueService(AppDbContext context) : IIssueService
     {
         IQueryable<Issue> query = _context.Issues
             .Include(i => i.ReportedByUser)
-            .Include(i => i.AssignedToUser);
-        
+            .Include(i => i.AssignedToUser)
+            .Include(i => i.UpdatedByUser);
+
         if (projectId.HasValue)
-            query  = query.Where(i => i.ProjectId == projectId.Value);
+            query = query.Where(i => i.ProjectId == projectId.Value);
 
         var issues = await query.ToListAsync();
 
-        return [.. issues.Select(i => new IssueResponseDto
-        {
-            Id =                i.IssueId,
-            ProjectId =         i.ProjectId,
-            Title =             i.Title,
-            Description =       i.Description,
-            Status =            i.Status.ToString(),
-            Priority =          i.Priority.ToString(),
-            CreatedAt =         i.CreatedAt,
-            UpdatedAt =         i.UpdatedAt,
-            ReportedByName =    i.ReportedByUser.Username,
-            AssignedToName =    i.AssignedToUser?.Username
-        })];
+        return [.. issues.Select(i => new IssueResponseDto(
+            i.IssueId, i.ProjectId, i.Title, i.Description,
+            i.Status.ToString(), i.Priority.ToString(),
+            i.ReportedBy, i.ReportedByUser?.Username, i.AssignedToUser?.Username,
+            i.UpdatedByUser?.Username, i.CreatedAt, i.UpdatedAt))];
     }
 
     public async Task<IssueResponseDto?> GetByIdAsync(int id)
@@ -41,38 +34,38 @@ public class IssueService(AppDbContext context) : IIssueService
         var issue = await _context.Issues
             .Include(i => i.ReportedByUser)
             .Include(i => i.AssignedToUser)
+            .Include(i => i.UpdatedByUser)
             .FirstOrDefaultAsync(i => i.IssueId == id);
 
         if (issue == null) return null;
 
-        return new IssueResponseDto
-        {
-            Id =                issue.IssueId,
-            ProjectId =         issue.ProjectId,
-            Title =             issue.Title,
-            Description =       issue.Description,
-            Status =            issue.Status.ToString(),
-            Priority =          issue.Priority.ToString(),
-            CreatedAt =         issue.CreatedAt,
-            UpdatedAt =         issue.UpdatedAt,
-            ReportedByName =    issue.ReportedByUser.Username,
-            AssignedToName =    issue.AssignedToUser?.Username
-        };
+        return new IssueResponseDto(
+            issue.IssueId, issue.ProjectId, issue.Title, issue.Description,
+            issue.Status.ToString(), issue.Priority.ToString(),
+            issue.ReportedBy, issue.ReportedByUser?.Username, issue.AssignedToUser?.Username,
+            issue.UpdatedByUser?.Username, issue.CreatedAt, issue.UpdatedAt);
     }
 
-    public async  Task<IssueResponseDto> CreateAsync(CreateIssueDto createIssueDto, int userId)
+    private async Task<ProjectMemberRole?> GetProjectRoleAsync(int userId, int projectId)
+    {
+        var member = await _context.ProjectMembers
+            .FirstOrDefaultAsync(pm => pm.UserId == userId && pm.ProjectId == projectId);
+        return member?.Role;
+    }
+
+    public async Task<IssueResponseDto> CreateAsync(CreateIssueDto createIssueDto, int userId)
     {
         var issue = new Issue
         {
-            ProjectId =     createIssueDto.ProjectId,
-            ReportedBy =    userId,
-            AssignedTo =    createIssueDto.AssignedTo,
-            Title =         createIssueDto.Title,
-            Description =   createIssueDto.Description,
-            Status =        IssueStatus.Open,
-            Priority =      createIssueDto.Priority,
-            CreatedAt =     DateTime.UtcNow,
-            UpdatedAt =     DateTime.UtcNow
+            ProjectId = createIssueDto.ProjectId,
+            ReportedBy = userId,
+            AssignedTo = createIssueDto.AssignedTo,
+            Title = createIssueDto.Title,
+            Description = createIssueDto.Description,
+            Status = createIssueDto.Status,
+            Priority = createIssueDto.Priority,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         _context.Issues.Add(issue);
@@ -81,51 +74,47 @@ public class IssueService(AppDbContext context) : IIssueService
         return await GetByIdAsync(issue.IssueId) ?? throw new Exception("Issue not found after creation");
     }
 
-    public async Task<(ServiceResultStatus Status, IssueResponseDto? Issue)> UpdateAsync(int id, UpdateIssueDto updateIssueDto, int userId, string userRole)
+    public async Task<(ServiceResultStatus Status, IssueResponseDto? Issue)> UpdateAsync(int id, UpdateIssueDto updateIssueDto, int userId)
     {
         var issue = await _context.Issues
             .Include(i => i.ReportedByUser)
             .Include(i => i.AssignedToUser)
             .FirstOrDefaultAsync(i => i.IssueId == id);
-            
+
         if (issue == null)
             return (ServiceResultStatus.NotFound, null);
 
-        if (userRole == "Reporter" && issue.ReportedBy != userId)
+        var projectRole = await GetProjectRoleAsync(userId, issue.ProjectId);
+        if (projectRole == ProjectMemberRole.Reporter && issue.ReportedBy != userId)
             return (ServiceResultStatus.Forbidden, null);
 
         if (updateIssueDto.Title != null) issue.Title = updateIssueDto.Title;
         if (updateIssueDto.Description != null) issue.Description = updateIssueDto.Description;
         if (updateIssueDto.Status != null) issue.Status = updateIssueDto.Status.Value;
         if (updateIssueDto.Priority != null) issue.Priority = updateIssueDto.Priority.Value;
-        if (updateIssueDto.AssignedTo != null) issue.AssignedTo = updateIssueDto.AssignedTo;
+        if (updateIssueDto.ClearAssignee) issue.AssignedTo = null;
+        else if (updateIssueDto.AssignedTo != null) issue.AssignedTo = updateIssueDto.AssignedTo;
         issue.UpdatedAt = DateTime.UtcNow;
+        issue.UpdatedBy = userId;
 
         await _context.SaveChangesAsync();
 
-        return (ServiceResultStatus.Success, new IssueResponseDto
-        {
-            Id =                issue.IssueId,
-            ProjectId =         issue.ProjectId,
-            Title =             issue.Title,
-            Description =       issue.Description,
-            Status =            issue.Status.ToString(),
-            Priority =          issue.Priority.ToString(),
-            CreatedAt =         issue.CreatedAt,
-            UpdatedAt =         issue.UpdatedAt,
-            ReportedByName =    issue.ReportedByUser.Username,
-            AssignedToName =    issue.AssignedToUser?.Username
-        });
+        return (ServiceResultStatus.Success, await GetByIdAsync(issue.IssueId));
     }
 
-    public async Task<ServiceResultStatus> DeleteAsync(int id, int userId, string userRole)
+    public async Task<ServiceResultStatus> DeleteAsync(int id, int userId)
     {
         var issue = await _context.Issues.FindAsync(id);
-        
+
         if (issue == null)
             return ServiceResultStatus.NotFound;
 
-        if (userRole == "Reporter" || (userRole == "Developer" && issue.ReportedBy != userId))
+        var projectRole = await GetProjectRoleAsync(userId, issue.ProjectId);
+        if (projectRole == null)
+            return ServiceResultStatus.Forbidden;
+        if (projectRole == ProjectMemberRole.Reporter && issue.ReportedBy != userId)
+            return ServiceResultStatus.Forbidden;
+        if (projectRole == ProjectMemberRole.Developer && issue.ReportedBy != userId)
             return ServiceResultStatus.Forbidden;
 
         _context.Issues.Remove(issue);
