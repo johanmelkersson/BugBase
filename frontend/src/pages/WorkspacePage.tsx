@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 import { getAll as getIssues, create as createIssue, update as updateIssue, deleteIssue } from '../api/issues';
-import { getAll as getComments, create as createComment, update as updateComment } from '../api/comments';
+import { getAll as getComments, create as createComment, update as updateComment, deleteComment } from '../api/comments';
 import { getMembers } from '../api/projects';
 import { StatusBadge, PriorityBadge } from '../components/Badges';
 import IssueFilters, { type IssueFilterState } from '../components/IssueFilters';
@@ -125,6 +125,11 @@ export default function WorkspacePage() {
         await deleteIssue(selectedIssue.id);
         setIssues(prev => prev.filter(i => i.id !== selectedIssue.id));
         setSelectedIssue(null);
+    }
+
+    async function handleDeleteComment(id: number) {
+        await deleteComment(id);
+        setComments(prev => prev.filter(c => c.id !== id));
     }
 
     async function handleSaveComment(id: number) {
@@ -545,13 +550,23 @@ export default function WorkspacePage() {
                                                 ) : (
                                                     <div className={`group relative px-3 py-2 rounded-2xl text-xs text-gray-200 ${isOwn ? 'bg-indigo-700 rounded-tr-sm' : 'bg-[#13141a] rounded-tl-sm'}`}>
                                                         {c.content}
-                                                        {isOwn && (
-                                                            <button
-                                                                onClick={() => { setEditingCommentId(c.id); setEditingCommentText(c.content); }}
-                                                                className="absolute -bottom-4 right-0 text-gray-600 hover:text-gray-400 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
-                                                            >
-                                                                Edit
-                                                            </button>
+                                                        {(isOwn || myProjectRole === 'Owner') && (
+                                                            <div className="absolute -bottom-4 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                {isOwn && (
+                                                                    <button
+                                                                        onClick={() => { setEditingCommentId(c.id); setEditingCommentText(c.content); }}
+                                                                        className="text-gray-600 hover:text-gray-400 text-[10px] whitespace-nowrap"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleDeleteComment(c.id)}
+                                                                    className="text-gray-600 hover:text-red-400 text-[10px] whitespace-nowrap"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 )}
