@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
-import { getAll as getIssues, create as createIssue, update as updateIssue } from '../api/issues';
+import { getAll as getIssues, create as createIssue, update as updateIssue, deleteIssue } from '../api/issues';
 import { getAll as getComments, create as createComment, update as updateComment } from '../api/comments';
 import { getMembers } from '../api/projects';
 import { StatusBadge, PriorityBadge } from '../components/Badges';
@@ -118,6 +118,13 @@ export default function WorkspacePage() {
         setIssues(prev => prev.map(i => i.id === updated.id ? updated : i));
         setSelectedIssue(updated);
         setEditMode(false);
+    }
+
+    async function handleDeleteIssue() {
+        if (!selectedIssue) return;
+        await deleteIssue(selectedIssue.id);
+        setIssues(prev => prev.filter(i => i.id !== selectedIssue.id));
+        setSelectedIssue(null);
     }
 
     async function handleSaveComment(id: number) {
@@ -392,6 +399,7 @@ export default function WorkspacePage() {
                             {!editMode && (
                                 <div className="flex items-center gap-2 ml-2 shrink-0">
                                     {canEditIssueText && <button onClick={handleStartEdit} className="text-gray-500 hover:text-white text-xs">Edit</button>}
+                                    {canEditIssueText && <button onClick={handleDeleteIssue} className="text-gray-500 hover:text-red-400 text-xs">Delete</button>}
                                     <button onClick={() => setSelectedIssue(null)} className="text-gray-500 hover:text-white text-xs">✕</button>
                                 </div>
                             )}
