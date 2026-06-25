@@ -92,8 +92,11 @@ public class IssueService(AppDbContext context) : IIssueService
         if (updateIssueDto.Description != null) issue.Description = updateIssueDto.Description;
         if (updateIssueDto.Status != null) issue.Status = updateIssueDto.Status.Value;
         if (updateIssueDto.Priority != null) issue.Priority = updateIssueDto.Priority.Value;
-        if (updateIssueDto.ClearAssignee) issue.AssignedTo = null;
-        else if (updateIssueDto.AssignedTo != null) issue.AssignedTo = updateIssueDto.AssignedTo;
+        if (projectRole != ProjectMemberRole.Reporter)
+        {
+            if (updateIssueDto.ClearAssignee) issue.AssignedTo = null;
+            else if (updateIssueDto.AssignedTo != null) issue.AssignedTo = updateIssueDto.AssignedTo;
+        }
         issue.UpdatedAt = DateTime.UtcNow;
         issue.UpdatedBy = userId;
 

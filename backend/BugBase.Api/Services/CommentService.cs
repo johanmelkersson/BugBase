@@ -68,7 +68,8 @@ public class CommentService(AppDbContext context) : ICommentService
 
         var issue = await _context.Issues.FindAsync(comment.IssueId);
         var projectRole = await GetProjectRoleAsync(userId, issue!.ProjectId);
-        if (projectRole == null || comment.UserId != userId)
+        if (projectRole == null) return (ServiceResultStatus.Forbidden, null);
+        if (projectRole != ProjectMemberRole.Owner && comment.UserId != userId)
             return (ServiceResultStatus.Forbidden, null);
 
         if (dto.Content == null)
@@ -91,7 +92,8 @@ public class CommentService(AppDbContext context) : ICommentService
 
         var issue = await _context.Issues.FindAsync(comment.IssueId);
         var projectRole = await GetProjectRoleAsync(userId, issue!.ProjectId);
-        if (projectRole == null || comment.UserId != userId)
+        if (projectRole == null) return ServiceResultStatus.Forbidden;
+        if (projectRole != ProjectMemberRole.Owner && comment.UserId != userId)
             return ServiceResultStatus.Forbidden;
 
         _context.Comments.Remove(comment);
