@@ -66,9 +66,10 @@ export default function InvitePopout() {
         <div className="relative" ref={ref}>
             <button
                 onClick={() => { setOpen(prev => !prev); setMessage(''); }}
-                className="flex items-center gap-1.5 border border-dashed border-gray-600 hover:border-indigo-500 text-gray-400 hover:text-gray-200 rounded-full px-3 py-1 text-xs transition-colors"
+                title="Invite member"
+                className="w-6 h-6 rounded-full border border-dashed border-gray-600 hover:border-indigo-400 text-gray-500 hover:text-indigo-400 flex items-center justify-center text-sm leading-none transition-colors"
             >
-                + Invite
+                +
             </button>
 
             {open && (

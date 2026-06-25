@@ -27,7 +27,7 @@ export default function RegisterPage() {
   return (
   <div className="min-h-screen bg-[#16171d] flex items-center justify-center px-4">
     <div className="w-full max-w-sm bg-[#1e1f27] border border-gray-700 rounded-xl p-8">
-      <h1 className="text-2xl font-semibold text-white mb-1">Skapa konto</h1>
+      <h1 className="text-2xl font-semibold text-white mb-1">Create account</h1>
       <p className="text-gray-400 text-sm mb-6">BugBase</p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -35,35 +35,35 @@ export default function RegisterPage() {
           value={username}
           onChange={e => setUsername(e.target.value)}
           type="text"
-          placeholder="Användarnamn"
+          placeholder="Username"
           className="bg-[#13141a] border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500"
         />
         <input
           value={email}
           onChange={e => setEmail(e.target.value)}
           type="email"
-          placeholder="E-post"
+          placeholder="Email"
           className="bg-[#13141a] border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500"
         />
         <input
           value={password}
           onChange={e => setPassword(e.target.value)}
           type="password"
-          placeholder="Lösenord"
+          placeholder="Password"
           className="bg-[#13141a] border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500"
         />
         <button
           type="submit"
           className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
         >
-          Registrera
+          Create account
         </button>
         {error && <p className="text-red-400 text-sm">{error}</p>}
       </form>
 
       <p className="text-gray-500 text-sm mt-6 text-center">
-        Har du redan ett konto?{' '}
-        <a href="/login" className="text-indigo-400 hover:text-indigo-300">Logga in</a>
+        Already have an account?{' '}
+        <a href="/login" className="text-indigo-400 hover:text-indigo-300">Sign in</a>
       </p>
     </div>
   </div>

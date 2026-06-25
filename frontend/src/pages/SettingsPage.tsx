@@ -82,9 +82,34 @@ export default function SettingsPage() {
     );
 
     return (
-        <div className="flex h-[calc(100vh-57px)]">
-            {/* Sidebar */}
-            <div className="w-56 border-r border-gray-700/60 px-3 py-5 flex flex-col gap-1 shrink-0">
+        <div className="flex flex-col sm:flex-row h-[calc(100vh-57px)]">
+
+            {/* Mobile tab bar */}
+            <div className="sm:hidden flex border-b border-gray-700 px-4 gap-1 shrink-0">
+                <button
+                    onClick={() => setActiveSection('all')}
+                    className={`px-3 py-2.5 text-sm transition-colors ${activeSection === 'all' ? 'text-white border-b-2 border-indigo-500' : 'text-gray-400 hover:text-white'}`}
+                >
+                    All
+                </button>
+                <button
+                    onClick={() => setActiveSection('profile')}
+                    className={`px-3 py-2.5 text-sm transition-colors ${activeSection === 'profile' ? 'text-white border-b-2 border-indigo-500' : 'text-gray-400 hover:text-white'}`}
+                >
+                    Profile
+                </button>
+                {auth?.role === 'Admin' && (
+                    <button
+                        onClick={() => setActiveSection('admin')}
+                        className={`px-3 py-2.5 text-sm transition-colors ${activeSection === 'admin' ? 'text-white border-b-2 border-indigo-500' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        Admin
+                    </button>
+                )}
+            </div>
+
+            {/* Desktop sidebar */}
+            <div className="hidden sm:flex w-56 border-r border-gray-700/60 px-3 py-5 flex-col gap-1 shrink-0">
                 <p className="text-xs text-gray-500 font-medium px-3 mb-2 uppercase tracking-wider">Settings</p>
                 <button
                     onClick={() => setActiveSection('all')}
@@ -97,16 +122,12 @@ export default function SettingsPage() {
                     <span>All Settings</span>
                 </button>
                 {navItem('Profile', 'profile')}
-                {auth?.role === 'Admin' && (
-                    <>
-                        {navItem('Admin', 'admin')}
-                    </>
-                )}
+                {auth?.role === 'Admin' && navItem('Admin', 'admin')}
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
-            <div className="px-8 py-6 max-w-2xl">
+            <div className="px-4 sm:px-8 py-6 max-w-2xl">
 
                 {(activeSection === 'all' || activeSection === 'profile') && (
                     <div className="flex flex-col gap-6 mb-8">
@@ -170,13 +191,13 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Delete account */}
-                        <div className="bg-[#1e1f27] border border-red-900/40 rounded-xl p-6 flex items-center justify-between">
+                        <div className="bg-[#1e1f27] border border-red-900/40 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
                                 <p className="text-white text-sm font-medium">Delete account</p>
                                 <p className="text-gray-500 text-xs mt-0.5">Permanently delete your account and all associated data.</p>
                             </div>
                             <button onClick={() => setShowDeleteConfirm(true)}
-                                className="px-4 py-2 border border-red-500/40 text-red-400 hover:text-red-300 hover:border-red-400/60 text-sm rounded-lg transition-colors shrink-0">
+                                className="self-start sm:self-auto px-4 py-2 border border-red-500/40 text-red-400 hover:text-red-300 hover:border-red-400/60 text-sm rounded-lg transition-colors shrink-0">
                                 Delete account
                             </button>
                         </div>
@@ -186,14 +207,14 @@ export default function SettingsPage() {
                 {auth?.role === 'Admin' && (activeSection === 'all' || activeSection === 'admin') && (
                     <div className="flex flex-col gap-4 mb-8">
                         <h2 className="text-xl font-bold text-white">Admin</h2>
-                        <div className="bg-[#1e1f27] border border-red-900/40 rounded-xl p-6 flex items-center justify-between">
+                        <div className="bg-[#1e1f27] border border-red-900/40 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
                                 <p className="text-white text-sm font-medium">Relinquish Admin role</p>
                                 <p className="text-gray-500 text-xs mt-0.5">This cannot be undone without help from another Admin.</p>
                             </div>
                             <button
                                 onClick={() => setShowDowngradeConfirm(true)}
-                                className="px-4 py-2 border border-red-500/40 text-red-400 hover:text-red-300 hover:border-red-400/60 text-sm rounded-lg transition-colors shrink-0"
+                                className="self-start sm:self-auto px-4 py-2 border border-red-500/40 text-red-400 hover:text-red-300 hover:border-red-400/60 text-sm rounded-lg transition-colors shrink-0"
                             >
                                 Relinquish Admin role
                             </button>

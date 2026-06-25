@@ -9,7 +9,7 @@ import type { Project, Invitation, User, ProjectMember, UserSearchResult } from 
 
 export default function DashboardPage() {
     const { auth } = useAuth();
-    const { setProjects, setSelectedProject, selectedProject, setMyProjectRole } = useProject();
+    const { setProjects, setSelectedProject, selectedProject, setMyProjectRole, setProjectMembers } = useProject();
     const navigate = useNavigate();
     const [projects, setLocalProjects] = useState<Project[]>([]);
     const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -125,6 +125,7 @@ export default function DashboardPage() {
                 updated[Number(pid)] = members.filter(m => m.id !== id);
             return updated;
         });
+        setProjectMembers(prev => prev.filter(m => m.id !== id));
         const p = await getAllProjectsAdmin();
         setAdminProjects(p);
     };
@@ -143,6 +144,7 @@ export default function DashboardPage() {
             ...prev,
             [selectedProject.id]: (prev[selectedProject.id] ?? []).filter(m => m.id !== userId)
         }));
+        setProjectMembers(prev => prev.filter(m => m.id !== userId));
     };
 
     const handleUpdateMemberRole = async (userId: number, role: string) => {
@@ -232,7 +234,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto px-6 py-8 flex flex-col gap-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-10">
 
             {auth?.role === 'Admin' && (
                 <div className="flex gap-1 border-b border-gray-700 -mx-6 px-6 mb-2">
@@ -258,16 +260,16 @@ export default function DashboardPage() {
                         <h2 className="text-lg font-semibold text-white mb-3">Pending Invitations</h2>
                         <div className="flex flex-col gap-3">
                             {invitations.map(inv => (
-                                <div key={inv.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl p-4 flex items-center justify-between">
+                                <div key={inv.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                     <div>
                                         <p className="text-white font-medium">{inv.projectName}</p>
                                         <p className="text-gray-400 text-sm">Invited by {inv.invitedByUsername} · Role: {inv.role}</p>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => handleAccept(inv.id)} className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors">
+                                    <div className="flex gap-2 shrink-0">
+                                        <button onClick={() => handleAccept(inv.id)} className="flex-1 sm:flex-none px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors">
                                             Accept
                                         </button>
-                                        <button onClick={() => handleDecline(inv.id)} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                                        <button onClick={() => handleDecline(inv.id)} className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
                                             Decline
                                         </button>
                                     </div>
@@ -280,11 +282,14 @@ export default function DashboardPage() {
                 {/* Member management */}
                 {canSeeProjectSection && (
                     <section>
-                        <h2 className="text-lg font-semibold text-white mb-3">{selectedProject!.name} — Members</h2>
+                        <h2 className="text-xl font-bold text-white mb-1">{selectedProject!.name}</h2>
+                        <h3 className="text-sm font-semibold text-gray-400 mb-3">Members</h3>
                         <div className="flex flex-col gap-2">
                             {sortedSelectedMembers.map(m => {
                                 const isSelf = m.id === auth?.userId;
                                 const isOwner = m.role === 'Owner';
+                                const ownerCount = selectedMembers.filter(x => x.role === 'Owner').length;
+                                const canEdit = isProjectOwner && (!isOwner || (isSelf && ownerCount > 1));
                                 return (
                                     <div key={m.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl px-5 py-3 flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
@@ -294,10 +299,9 @@ export default function DashboardPage() {
                                             <span className="text-white text-sm">{m.username}{isSelf && <span className="text-gray-500 text-xs ml-1">(you)</span>}</span>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            {isProjectOwner && !isOwner ? (
+                                            {canEdit ? (
                                                 <select
                                                     value={m.role}
-                                                    disabled={isSelf}
                                                     onChange={e => handleUpdateMemberRole(m.id, e.target.value)}
                                                     className="bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500 disabled:opacity-50"
                                                 >
@@ -308,7 +312,7 @@ export default function DashboardPage() {
                                             ) : (
                                                 <span className="text-xs text-gray-400 px-3 py-1.5 border border-gray-700 rounded-lg">{m.role}</span>
                                             )}
-                                            {isProjectOwner && !isOwner && !isSelf && (
+                                            {canEdit && !isSelf && (
                                                 <button
                                                     onClick={() => handleRemoveMember(m.id)}
                                                     className="text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-lg px-3 py-1.5 text-xs transition-colors"
@@ -324,34 +328,38 @@ export default function DashboardPage() {
                             {/* Invite row — Owner only */}
                             {isProjectOwner && (
                                 <div ref={inviteRef} className="relative mt-1 flex flex-col gap-2">
-                                    <div className="bg-[#1e1f27] border border-dashed border-gray-600 rounded-xl px-5 py-3 flex items-center gap-3">
-                                        {selectedInvitee && (
-                                            <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
-                                                {selectedInvitee.username[0].toUpperCase()}
-                                            </div>
-                                        )}
-                                        <input
-                                            value={inviteSearch}
-                                            onChange={e => handleInviteSearch(e.target.value)}
-                                            placeholder="Invite by username…"
-                                            className="flex-1 bg-transparent text-gray-300 placeholder-gray-600 text-sm focus:outline-none"
-                                        />
-                                        <select
-                                            value={inviteRole}
-                                            onChange={e => setInviteRole(e.target.value)}
-                                            className="bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500"
-                                        >
-                                            <option value="Owner">Owner</option>
-                                            <option value="Developer">Developer</option>
-                                            <option value="Reporter">Reporter</option>
-                                        </select>
-                                        <button
-                                            onClick={handleSendInvite}
-                                            disabled={!selectedInvitee}
-                                            className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs rounded-lg transition-colors shrink-0"
-                                        >
-                                            Invite
-                                        </button>
+                                    <div className="bg-[#1e1f27] border border-dashed border-gray-600 rounded-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                            {selectedInvitee && (
+                                                <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                                                    {selectedInvitee.username[0].toUpperCase()}
+                                                </div>
+                                            )}
+                                            <input
+                                                value={inviteSearch}
+                                                onChange={e => handleInviteSearch(e.target.value)}
+                                                placeholder="Invite by username…"
+                                                className="flex-1 bg-transparent text-gray-300 placeholder-gray-600 text-sm focus:outline-none min-w-0"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <select
+                                                value={inviteRole}
+                                                onChange={e => setInviteRole(e.target.value)}
+                                                className="flex-1 sm:flex-none bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500"
+                                            >
+                                                <option value="Owner">Owner</option>
+                                                <option value="Developer">Developer</option>
+                                                <option value="Reporter">Reporter</option>
+                                            </select>
+                                            <button
+                                                onClick={handleSendInvite}
+                                                disabled={!selectedInvitee}
+                                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs rounded-lg transition-colors shrink-0"
+                                            >
+                                                Invite
+                                            </button>
+                                        </div>
                                     </div>
                                     {inviteResults.length > 0 && (
                                         <div className="absolute top-full left-0 right-0 mt-1 bg-[#1e1f27] border border-gray-700 rounded-xl shadow-xl z-10 overflow-hidden">
@@ -389,8 +397,8 @@ export default function DashboardPage() {
 
                 {/* Owned projects */}
                 <section>
-                    <h1 className="text-xl font-bold text-white mb-3">Projects</h1>
-                    <h2 className="text-lg font-semibold text-white mb-3">Creator</h2>
+                    <h1 className="text-xl font-bold text-white mb-1">Projects</h1>
+                    <h2 className="text-sm font-semibold text-gray-400 mb-3">Creator</h2>
                     {ownedProjects.length === 0 ? (
                         <p className="text-gray-500 text-sm">You have no projects.</p>
                     ) : (
@@ -441,7 +449,7 @@ export default function DashboardPage() {
 
                 {/* Member projects */}
                 <section>
-                    <h2 className="text-lg font-semibold text-white mb-3">Collaborator</h2>
+                    <h2 className="text-sm font-semibold text-gray-400 mb-3">Collaborator</h2>
                     {memberProjects.length === 0 ? (
                         <p className="text-gray-500 text-sm">You're not a member of any other projects.</p>
                     ) : (
@@ -475,7 +483,7 @@ export default function DashboardPage() {
                         <h2 className="text-lg font-semibold text-white mb-3">All Users</h2>
                         <div className="flex flex-col gap-2">
                             {adminUsers.filter(u => u.id !== auth?.userId).map(user => (
-                                <div key={user.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+                                <div key={user.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                     <div>
                                         <p className="text-white text-sm font-medium">{user.username}</p>
                                         <p className="text-gray-500 text-xs mt-0.5">{user.email}</p>

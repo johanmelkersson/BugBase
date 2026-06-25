@@ -1,17 +1,16 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
-import { updateProject } from '../api/projects';
 import { getAll as getIssues, create as createIssue, update as updateIssue } from '../api/issues';
 import { getAll as getComments, create as createComment, update as updateComment } from '../api/comments';
 import { getMembers } from '../api/projects';
 import { StatusBadge, PriorityBadge } from '../components/Badges';
 import IssueFilters, { type IssueFilterState } from '../components/IssueFilters';
-import type { Issue, CreateIssue, Comment, ProjectMember, UpdateIssue } from '../types';
+import type { Issue, CreateIssue, Comment, UpdateIssue } from '../types';
 
 export default function WorkspacePage() {
     const { auth } = useAuth();
-    const { selectedProject, setSelectedProject, setProjects, setShowCreateModal, setMyProjectRole } = useProject();
+    const { selectedProject, setShowCreateModal, setMyProjectRole, projectMembers, setProjectMembers } = useProject();
     const [issues, setIssues] = useState<Issue[]>([]);
     const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
     const [view, setView] = useState<'list' | 'kanban'>('list');
@@ -21,10 +20,11 @@ export default function WorkspacePage() {
     const [editForm, setEditForm] = useState<UpdateIssue>({});
     const [formError, setFormError] = useState('');
     const [createExpanded, setCreateExpanded] = useState(false);
+    const createFormRef = useRef<HTMLDivElement>(null);
     const [page, setPage] = useState(0);
     const PAGE_SIZE = 10;
 
-    const [filters, setFilters] = useState<IssueFilterState>({ searchTerm: '', statuses: [], priorities: [], assignee: '' });
+    const [filters, setFilters] = useState<IssueFilterState>({ searchTerm: '', statuses: [], priorities: [], assignees: [] });
     const [sortBy, setSortBy] = useState('createdDesc');
 
     function handleFiltersChange(f: IssueFilterState) { setFilters(f); setPage(0); }
@@ -34,16 +34,12 @@ export default function WorkspacePage() {
     const [commentText, setCommentText] = useState('');
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
     const [editingCommentText, setEditingCommentText] = useState('');
-    const [members, setMembers] = useState<ProjectMember[]>([]);
 
     const roleOrder: Record<string, number> = { Owner: 0, Developer: 1, Reporter: 2 };
-    const sortedMembers = useMemo(() => [...members].sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9)), [members]);
-    const myProjectRole = useMemo(() => members.find(m => m.id === auth?.userId)?.role ?? null, [members, auth]);
-    const canEditProject = myProjectRole === 'Owner';
+    const sortedMembers = useMemo(() => [...projectMembers].sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9)), [projectMembers]);
+    const myProjectRole = useMemo(() => projectMembers.find(m => m.id === auth?.userId)?.role ?? null, [projectMembers, auth]);
     const canEditIssueText = myProjectRole === 'Owner' || myProjectRole === 'Developer' || selectedIssue?.reportedById === auth?.userId;
 
-    const [editingProject, setEditingProject] = useState(false);
-    const [projectForm, setProjectForm] = useState({ name: '', description: '' });
     const [assigneeOpen, setAssigneeOpen] = useState(false);
     const [detailAssigneeOpen, setDetailAssigneeOpen] = useState(false);
 
@@ -53,10 +49,21 @@ export default function WorkspacePage() {
         setIssues([]);
         getIssues(selectedProject.id).then(setIssues);
         getMembers(selectedProject.id).then(m => {
-            setMembers(m);
+            setProjectMembers(m);
             setMyProjectRole(m.find(mem => mem.id === auth?.userId)?.role ?? null);
         });
     }, [selectedProject]);
+
+    useEffect(() => {
+        function handler(e: MouseEvent) {
+            if (createFormRef.current && !createFormRef.current.contains(e.target as Node)) {
+                setCreateExpanded(false);
+                setAssigneeOpen(false);
+            }
+        }
+        if (createExpanded) document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [createExpanded]);
 
     useEffect(() => {
         if (!selectedIssue) { setComments([]); return; }
@@ -72,7 +79,7 @@ export default function WorkspacePage() {
             (!filters.searchTerm || issue.title.toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
             (filters.statuses.length === 0 || filters.statuses.includes(issue.status)) &&
             (filters.priorities.length === 0 || filters.priorities.includes(issue.priority)) &&
-            (!filters.assignee || (filters.assignee === 'unassigned' ? !issue.assignedToName : issue.assignedToName === filters.assignee))
+            (filters.assignees.length === 0 || filters.assignees.some(a => a === 'unassigned' ? !issue.assignedToName : issue.assignedToName === a))
         )
         .sort((a, b) => {
             switch (sortBy) {
@@ -144,92 +151,38 @@ export default function WorkspacePage() {
     return (
         <div className="flex gap-4 h-[calc(100vh-57px)] overflow-hidden">
 
-            {/* Left panel */}
-            <div className="w-60 shrink-0 flex flex-col gap-3 overflow-y-auto border-r border-gray-700 py-4 px-4">
-
-                {/* Project info */}
-                <div className="bg-[#1e1f27] border border-gray-700 rounded-xl p-4">
-                    {editingProject ? (
-                        <div className="flex flex-col gap-2">
-                            <input
-                                value={projectForm.name}
-                                onChange={e => setProjectForm(prev => ({ ...prev, name: e.target.value }))}
-                                className="bg-[#13141a] border border-gray-700 text-gray-100 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-500"
-                            />
-                            <input
-                                value={projectForm.description}
-                                onChange={e => setProjectForm(prev => ({ ...prev, description: e.target.value }))}
-                                className="bg-[#13141a] border border-gray-700 text-gray-100 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-indigo-500"
-                            />
-                            <div className="flex gap-1.5">
-                                <button onClick={async () => {
-                                    const updated = await updateProject(selectedProject.id, projectForm.name, projectForm.description);
-                                    setSelectedProject(updated);
-                                    setProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
-                                    setEditingProject(false);
-                                }} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg py-1.5 transition-colors">Save</button>
-                                <button onClick={() => setEditingProject(false)} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded-lg py-1.5 transition-colors">Cancel</button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div>
-                            <div className="flex items-start justify-between mb-1">
-                                <h2 className="text-white font-semibold text-sm">{selectedProject.name}</h2>
-                                {canEditProject && <button onClick={() => { setProjectForm({ name: selectedProject.name, description: selectedProject.description }); setEditingProject(true); }} className="text-gray-600 hover:text-gray-400 text-xs ml-2 shrink-0">Edit</button>}
-                            </div>
-                            <p className="text-gray-500 text-xs">{selectedProject.description}</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* View toggle */}
-                <div className="bg-[#1e1f27] border border-gray-700 rounded-xl p-3 flex gap-2">
-                    <button
-                        onClick={() => setView('list')}
-                        className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${view === 'list' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        List
-                    </button>
-                    <button
-                        onClick={() => setView('kanban')}
-                        className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${view === 'kanban' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        Kanban
-                    </button>
-                </div>
-
-                {/* Members */}
-                <div className="bg-[#1e1f27] border border-gray-700 rounded-xl p-4">
-                    <h3 className="text-white text-sm font-medium mb-3">Members</h3>
-                    <div className="flex flex-col gap-2">
-                        {sortedMembers.map(m => (
-                            <div key={m.id} className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
-                                    {m.username[0].toUpperCase()}
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-gray-300 text-xs truncate">{m.username}</p>
-                                    <p className="text-gray-600 text-[10px]">{m.role}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
             {/* Main area */}
-            <div className="flex-1 flex flex-col min-w-0 py-4 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 py-4 px-4 overflow-hidden">
+
+                {/* Persistent top bar — always visible regardless of view */}
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    <div className="flex gap-1 bg-[#1e1f27] border border-gray-700 rounded-lg p-1 shrink-0">
+                        <button
+                            onClick={() => setView('list')}
+                            className={`px-4 py-1 text-xs rounded-md transition-colors ${view === 'list' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            List
+                        </button>
+                        <button
+                            onClick={() => setView('kanban')}
+                            className={`px-4 py-1 text-xs rounded-md transition-colors ${view === 'kanban' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            Kanban
+                        </button>
+                    </div>
+
+                    <IssueFilters filters={filters} onChange={handleFiltersChange} members={projectMembers} className="flex gap-2 min-w-0" />
+
+                </div>
+
                 {view === 'list' ? (
                     <>
-                        {/* Filters + sort row */}
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                            <div className="flex-1 min-w-0">
-                                <IssueFilters filters={filters} onChange={handleFiltersChange} members={members} />
-                            </div>
+                        {/* Sort row — list only */}
+                        <div className="flex justify-end mb-1">
                             <select
                                 value={sortBy}
                                 onChange={e => handleSortChange(e.target.value)}
-                                className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500 shrink-0 mt-0.5"
+                                className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500 shrink-0"
                             >
                                 <option value="createdDesc">Created ↓</option>
                                 <option value="createdAsc">Created ↑</option>
@@ -262,138 +215,146 @@ export default function WorkspacePage() {
                             ))}
                         </div>
 
-                        {/* Pagination + create */}
-                        <div className="pt-3 border-t border-gray-700 mt-3 flex flex-col gap-2">
-                            {/* Pagination */}
-                            {filteredIssues.length > PAGE_SIZE && (
-                                <div className="flex items-center justify-between text-xs text-gray-500">
-                                    <button
-                                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                                        disabled={page === 0}
-                                        className="px-3 py-1 rounded-lg bg-[#1e1f27] border border-gray-700 hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        ← Prev
-                                    </button>
-                                    <span>{page + 1} / {Math.ceil(filteredIssues.length / PAGE_SIZE)}</span>
-                                    <button
-                                        onClick={() => setPage(p => Math.min(Math.ceil(filteredIssues.length / PAGE_SIZE) - 1, p + 1))}
-                                        disabled={page >= Math.ceil(filteredIssues.length / PAGE_SIZE) - 1}
-                                        className="px-3 py-1 rounded-lg bg-[#1e1f27] border border-gray-700 hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Next →
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Quick create */}
-                            {createExpanded ? (
-                                <form onSubmit={async e => { await handleCreateIssue(e); setCreateExpanded(false); setAssigneeOpen(false); }} className="flex flex-col gap-2">
-                                    <input
-                                        value={form.title}
-                                        onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
-                                        placeholder="Title"
-                                        required
-                                        autoFocus
-                                        className="bg-[#1e1f27] border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500"
-                                    />
-                                    <textarea
-                                        value={form.description}
-                                        onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-                                        placeholder="Description"
-                                        rows={2}
-                                        className="bg-[#1e1f27] border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 resize-none"
-                                    />
-                                    <div className="flex gap-3 items-end">
-                                        <div className="flex flex-col gap-1 flex-[2]">
-                                            <span className="text-gray-500 text-[10px] uppercase tracking-wide pl-0.5">Priority</span>
-                                            <select value={form.priority} onChange={e => setForm(prev => ({ ...prev, priority: e.target.value }))} className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
-                                                <option value="Low">Low</option>
-                                                <option value="Medium">Medium</option>
-                                                <option value="High">High</option>
-                                                <option value="Critical">Critical</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex flex-col gap-1 flex-[2]">
-                                            <span className="text-gray-500 text-[10px] uppercase tracking-wide pl-0.5">Status</span>
-                                            <select value={form.status} onChange={e => setForm(prev => ({ ...prev, status: e.target.value }))} className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
-                                                <option value="Open">Open</option>
-                                                <option value="InProgress">In Progress</option>
-                                                <option value="Review">Review</option>
-                                                <option value="Closed">Closed</option>
-                                            </select>
-                                        </div>
-                                        {/* Assignee picker — chip style */}
-                                        <div className="flex flex-col gap-1 flex-[1]">
-                                            <span className="text-gray-500 text-[10px] uppercase tracking-wide pl-0.5">Assignee</span>
-                                            <div className="relative flex items-center" style={{ height: '30px' }}>
-                                                {form.assignedTo ? (
-                                                    <div className="flex items-center gap-1.5 bg-[#1e1f27] border border-gray-700 rounded-full pl-1 pr-2 py-0.5">
-                                                        <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[9px] text-white font-medium shrink-0">
-                                                            {members.find(m => m.id === form.assignedTo)?.username[0].toUpperCase()}
-                                                        </div>
-                                                        <span className="text-gray-200 text-xs truncate max-w-[60px]">{members.find(m => m.id === form.assignedTo)?.username}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setForm(prev => ({ ...prev, assignedTo: undefined })); setAssigneeOpen(false); }}
-                                                            className="text-gray-500 hover:text-gray-200 text-sm leading-none transition-colors ml-0.5"
-                                                        >×</button>
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setAssigneeOpen(v => !v)}
-                                                        className="flex items-center gap-1 border border-dashed border-gray-600 hover:border-indigo-500 rounded-full px-3 py-0.5 text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
-                                                    >
-                                                        + Assign
-                                                    </button>
-                                                )}
-                                                {assigneeOpen && (
-                                                    <div className="absolute bottom-full mb-1 left-0 bg-[#13141a] border border-gray-700 rounded-lg shadow-xl z-30 py-1 min-w-[140px]">
-                                                        {sortedMembers.map(m => (
-                                                            <button
-                                                                key={m.id}
-                                                                type="button"
-                                                                onClick={() => { setForm(prev => ({ ...prev, assignedTo: m.id })); setAssigneeOpen(false); }}
-                                                                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 transition-colors text-left"
-                                                            >
-                                                                <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
-                                                                    {m.username[0].toUpperCase()}
-                                                                </div>
-                                                                <span className="text-gray-300 text-xs">{m.username}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg py-2 transition-colors">Create</button>
-                                        <button type="button" onClick={() => { setCreateExpanded(false); setAssigneeOpen(false); setForm({ title: '', description: '', priority: 'Low', status: 'Open' }); }} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded-lg py-2 transition-colors">Cancel</button>
-                                    </div>
-                                    {formError && <p className="text-red-400 text-xs">{formError}</p>}
-                                </form>
-                            ) : (
+                        {/* Pagination */}
+                        {filteredIssues.length > PAGE_SIZE && (
+                            <div className="pt-3 border-t border-gray-700 mt-3 flex items-center justify-between text-xs text-gray-500">
                                 <button
-                                    onClick={() => setCreateExpanded(true)}
-                                    className="w-full text-left px-4 py-2 rounded-lg border border-dashed border-gray-700 hover:border-indigo-500 text-gray-500 hover:text-gray-300 text-xs transition-colors"
+                                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                                    disabled={page === 0}
+                                    className="px-3 py-1 rounded-lg bg-[#1e1f27] border border-gray-700 hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    + New issue
+                                    ← Prev
                                 </button>
-                            )}
-                        </div>
+                                <span>{page + 1} / {Math.ceil(filteredIssues.length / PAGE_SIZE)}</span>
+                                <button
+                                    onClick={() => setPage(p => Math.min(Math.ceil(filteredIssues.length / PAGE_SIZE) - 1, p + 1))}
+                                    disabled={page >= Math.ceil(filteredIssues.length / PAGE_SIZE) - 1}
+                                    className="px-3 py-1 rounded-lg bg-[#1e1f27] border border-gray-700 hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        )}
                     </>
                 ) : (
-                    <div className="flex items-center justify-center h-full bg-[#1e1f27] border border-gray-700 rounded-xl">
+                    <div className="flex items-center justify-center flex-1 bg-[#1e1f27] border border-gray-700 rounded-xl">
                         <p className="text-gray-500 text-sm">Kanban — coming soon</p>
                     </div>
                 )}
+
+                {/* New issue — persistent footer, always visible regardless of view */}
+                <div className="pt-3 border-t border-gray-700 mt-3" ref={createFormRef}>
+                {createExpanded ? (
+                    <div>
+                        <form onSubmit={async e => { await handleCreateIssue(e); setAssigneeOpen(false); }} className="flex flex-col gap-2">
+                            <input
+                                value={form.title}
+                                onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
+                                placeholder="Title"
+                                required
+                                autoFocus
+                                className="bg-[#1e1f27] border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500"
+                            />
+                            <textarea
+                                value={form.description}
+                                onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Description"
+                                rows={2}
+                                className="bg-[#1e1f27] border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 resize-none"
+                            />
+                            <div className="flex gap-3 items-end">
+                                <div className="flex flex-col gap-1 flex-[2]">
+                                    <span className="text-gray-500 text-[10px] uppercase tracking-wide pl-0.5">Priority</span>
+                                    <select value={form.priority} onChange={e => setForm(prev => ({ ...prev, priority: e.target.value }))} className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Critical">Critical</option>
+                                    </select>
+                                </div>
+                                <div className="flex flex-col gap-1 flex-[2]">
+                                    <span className="text-gray-500 text-[10px] uppercase tracking-wide pl-0.5">Status</span>
+                                    <select value={form.status} onChange={e => setForm(prev => ({ ...prev, status: e.target.value }))} className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
+                                        <option value="Open">Open</option>
+                                        <option value="InProgress">In Progress</option>
+                                        <option value="Review">Review</option>
+                                        <option value="Closed">Closed</option>
+                                    </select>
+                                </div>
+                                <div className="flex flex-col gap-1 flex-[1]">
+                                    <span className="text-gray-500 text-[10px] uppercase tracking-wide pl-0.5">Assignee</span>
+                                    <div className="relative flex items-center" style={{ height: '30px' }}>
+                                        {form.assignedTo ? (
+                                            <div className="flex items-center gap-1.5 bg-[#1e1f27] border border-gray-700 rounded-full pl-1 pr-2 py-0.5">
+                                                <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[9px] text-white font-medium shrink-0">
+                                                    {projectMembers.find(m => m.id === form.assignedTo)?.username[0].toUpperCase()}
+                                                </div>
+                                                <span className="text-gray-200 text-xs truncate max-w-[60px]">{projectMembers.find(m => m.id === form.assignedTo)?.username}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setForm(prev => ({ ...prev, assignedTo: undefined })); setAssigneeOpen(false); }}
+                                                    className="text-gray-500 hover:text-gray-200 text-sm leading-none transition-colors ml-0.5"
+                                                >×</button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setAssigneeOpen(v => !v)}
+                                                className="flex items-center gap-1 border border-dashed border-gray-600 hover:border-indigo-500 rounded-full px-3 py-0.5 text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
+                                            >
+                                                + Assign
+                                            </button>
+                                        )}
+                                        {assigneeOpen && (
+                                            <div className="absolute bottom-full mb-1 left-0 bg-[#13141a] border border-gray-700 rounded-lg shadow-xl z-30 py-1 min-w-[140px]">
+                                                {sortedMembers.map(m => (
+                                                    <button
+                                                        key={m.id}
+                                                        type="button"
+                                                        onClick={() => { setForm(prev => ({ ...prev, assignedTo: m.id })); setAssigneeOpen(false); }}
+                                                        className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 transition-colors text-left"
+                                                    >
+                                                        <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                                                            {m.username[0].toUpperCase()}
+                                                        </div>
+                                                        <span className="text-gray-300 text-xs">{m.username}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg py-2 transition-colors">Create</button>
+                                <button type="button" onClick={() => { setCreateExpanded(false); setAssigneeOpen(false); setForm({ title: '', description: '', priority: 'Low', status: 'Open' }); }} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded-lg py-2 transition-colors">Cancel</button>
+                            </div>
+                            {formError && <p className="text-red-400 text-xs">{formError}</p>}
+                        </form>
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => setCreateExpanded(true)}
+                        className="w-full text-left px-4 py-2 rounded-lg border border-dashed border-gray-700 hover:border-indigo-500 text-gray-500 hover:text-gray-300 text-xs transition-colors"
+                    >
+                        + New issue
+                    </button>
+                )}
+                </div>
             </div>
 
-            {/* Right panel — always visible */}
-            <div className="w-72 shrink-0 bg-[#1e1f27] border-l border-gray-700 py-4 px-5 overflow-y-auto">
+            {/* Right panel — drawer on mobile, fixed column on desktop */}
+            <div className={`bg-[#1e1f27] py-4 px-5 overflow-y-auto fixed inset-y-0 right-0 w-full z-50 transition-transform duration-200 sm:relative sm:inset-auto sm:z-auto sm:w-72 sm:shrink-0 sm:border-l sm:border-gray-700 sm:translate-x-0 sm:transition-none ${selectedIssue ? 'translate-x-0' : 'translate-x-full'}`}>
                 {selectedIssue ? (
                     <>
+                        {/* Mobile back button */}
+                        <button
+                            onClick={() => setSelectedIssue(null)}
+                            className="sm:hidden flex items-center gap-1 text-gray-400 hover:text-white text-xs mb-4 transition-colors"
+                        >
+                            ← Back to issues
+                        </button>
+
                         {/* Header */}
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 min-w-0">
