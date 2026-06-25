@@ -114,8 +114,6 @@ public class IssueService(AppDbContext context) : IIssueService
             return ServiceResultStatus.Forbidden;
         if (projectRole == ProjectMemberRole.Reporter && issue.ReportedBy != userId)
             return ServiceResultStatus.Forbidden;
-        if (projectRole == ProjectMemberRole.Developer && issue.ReportedBy != userId)
-            return ServiceResultStatus.Forbidden;
 
         _context.Issues.Remove(issue);
         await _context.SaveChangesAsync();
