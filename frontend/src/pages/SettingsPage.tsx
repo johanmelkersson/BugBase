@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { deleteAccount, updateProfile } from '../api/users';
-import { useEffect } from 'react';
 
 type Section = 'all' | 'profile' | 'admin';
 
