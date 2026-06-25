@@ -27,7 +27,7 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
             Username = registerDto.Username,
             Email = registerDto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-            Role = UserRole.User,
+            Role = await _context.Users.AnyAsync() ? UserRole.User : UserRole.Admin,
             CreatedAt = DateTime.UtcNow
         };
 
