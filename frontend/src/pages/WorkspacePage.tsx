@@ -39,6 +39,7 @@ export default function WorkspacePage() {
     const sortedMembers = useMemo(() => [...projectMembers].sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9)), [projectMembers]);
     const myProjectRole = useMemo(() => projectMembers.find(m => m.id === auth?.userId)?.role ?? null, [projectMembers, auth]);
     const canEditIssueText = myProjectRole === 'Owner' || myProjectRole === 'Developer' || selectedIssue?.reportedById === auth?.userId;
+    const canAssign = myProjectRole === 'Owner' || myProjectRole === 'Developer';
 
     const [assigneeOpen, setAssigneeOpen] = useState(false);
     const [detailAssigneeOpen, setDetailAssigneeOpen] = useState(false);
@@ -416,12 +417,13 @@ export default function WorkspacePage() {
                                     <span>Status</span>
                                     <select
                                         value={selectedIssue.status}
+                                        disabled={!canEditIssueText}
                                         onChange={async e => {
                                             const updated = await updateIssue(selectedIssue.id, { status: e.target.value });
                                             setIssues(prev => prev.map(i => i.id === updated.id ? updated : i));
                                             setSelectedIssue(updated);
                                         }}
-                                        className="bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500"
+                                        className="bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="Open">Open</option>
                                         <option value="InProgress">In Progress</option>
@@ -433,12 +435,13 @@ export default function WorkspacePage() {
                                     <span>Priority</span>
                                     <select
                                         value={selectedIssue.priority}
+                                        disabled={!canEditIssueText}
                                         onChange={async e => {
                                             const updated = await updateIssue(selectedIssue.id, { priority: e.target.value });
                                             setIssues(prev => prev.map(i => i.id === updated.id ? updated : i));
                                             setSelectedIssue(updated);
                                         }}
-                                        className="bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500"
+                                        className="bg-[#13141a] border border-gray-700 text-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="Low">Low</option>
                                         <option value="Medium">Medium</option>
@@ -448,7 +451,9 @@ export default function WorkspacePage() {
                                 </div>
                                 <div className="flex items-center justify-between text-xs text-gray-500">
                                     <span>Assigned to</span>
-                                    <div className="relative">
+                                    {!canAssign ? (
+                                        <span className="text-gray-300 text-xs">{selectedIssue.assignedToName ?? '—'}</span>
+                                    ) : <div className="relative">
                                         {selectedIssue.assignedToName ? (
                                             <div className="flex items-center gap-1.5 bg-[#13141a] border border-gray-700 rounded-full pl-1 pr-2 py-0.5">
                                                 <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[9px] text-white font-medium shrink-0">
@@ -499,7 +504,7 @@ export default function WorkspacePage() {
                                                 ))}
                                             </div>
                                         )}
-                                    </div>
+                                    </div>}
                                 </div>
                                 <div className="text-xs text-gray-500 space-y-1.5 pt-1">
                                     <div className="flex items-center gap-1.5">
