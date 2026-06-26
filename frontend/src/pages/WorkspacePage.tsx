@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable, useDraggable, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 import { getAll as getIssues, getDetail, create as createIssue, update as updateIssue, deleteIssue } from '../api/issues';
@@ -13,7 +14,9 @@ export default function WorkspacePage() {
     const { selectedProject, setShowCreateModal, setMyProjectRole, projectMembers, setProjectMembers } = useProject();
     const [issues, setIssues] = useState<Issue[]>([]);
     const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
-    const [view, setView] = useState<'list' | 'kanban'>('list');
+    const [view, setView] = useState<'list' | 'kanban'>(() => (localStorage.getItem('workspace-view') as 'list' | 'kanban') ?? 'kanban');
+
+    function handleViewChange(v: 'list' | 'kanban') { setView(v); localStorage.setItem('workspace-view', v); }
 
     const [form, setForm] = useState<CreateIssue>({ title: '', description: '', priority: 'Low', status: 'Open' });
     const [editMode, setEditMode] = useState(false);
@@ -147,6 +150,72 @@ export default function WorkspacePage() {
         setCommentText('');
     }
 
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+    const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
+
+    function handleDragStart(event: DragStartEvent) {
+        setActiveIssue(issues.find(i => i.id === event.active.id) ?? null);
+    }
+
+    async function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const issueId = active.id as number;
+        const newStatus = over.id as string;
+        const issue = issues.find(i => i.id === issueId);
+        if (!issue || issue.status === newStatus) return;
+        setActiveIssue(null);
+        setIssues(prev => prev.map(i => i.id === issueId ? { ...i, status: newStatus } : i));
+        if (selectedIssue?.id === issueId) setSelectedIssue(prev => prev ? { ...prev, status: newStatus } : prev);
+        await updateIssue(issueId, { status: newStatus });
+    }
+
+    function KanbanCard({ issue, dragging = false }: { issue: Issue; dragging?: boolean }) {
+        return (
+            <div className={`bg-[#13141a] border rounded-lg px-3 py-2.5 text-left w-full transition-colors ${dragging ? 'border-indigo-400 shadow-xl opacity-95' : selectedIssue?.id === issue.id ? 'border-indigo-500' : 'border-gray-700 hover:border-indigo-500'}`}>
+                <p className="text-white text-xs font-medium mb-2 leading-snug">{issue.title}</p>
+                <div className="flex items-center justify-between gap-2">
+                    <PriorityBadge priority={issue.priority} />
+                    {issue.assignedToName && (
+                        <div title={issue.assignedToName} className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                            {issue.assignedToName[0].toUpperCase()}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    function DraggableCard({ issue }: { issue: Issue }) {
+        const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: issue.id });
+        return (
+            <div ref={setNodeRef} {...listeners} {...attributes}
+                onClick={() => setSelectedIssue(issue)}
+                className={`cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-0' : ''}`}
+            >
+                <KanbanCard issue={issue} />
+            </div>
+        );
+    }
+
+    function DroppableColumn({ status, label, columnIssues }: { status: string; label: string; columnIssues: Issue[] }) {
+        const { setNodeRef, isOver } = useDroppable({ id: status });
+        return (
+            <div className={`flex flex-col min-w-[200px] flex-1 border rounded-xl overflow-hidden transition-colors ${isOver ? 'border-indigo-500 bg-indigo-500/5' : 'border-gray-700 bg-[#1e1f27]'}`}>
+                <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-700 shrink-0">
+                    <span className="text-xs font-semibold text-gray-300">{label}</span>
+                    <span className="text-xs text-gray-500 bg-[#13141a] rounded-full px-2 py-0.5">{columnIssues.length}</span>
+                </div>
+                <div ref={setNodeRef} className="flex flex-col gap-2 p-2 overflow-y-auto flex-1 min-h-[60px]">
+                    {columnIssues.map(issue => <DraggableCard key={issue.id} issue={issue} />)}
+                    {columnIssues.length === 0 && (
+                        <p className="text-gray-700 text-xs text-center py-4">No issues</p>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     if (!selectedProject) {
         return (
             <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -171,13 +240,13 @@ export default function WorkspacePage() {
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <div className="flex gap-1 bg-[#1e1f27] border border-gray-700 rounded-lg p-1 shrink-0">
                         <button
-                            onClick={() => setView('list')}
+                            onClick={() => handleViewChange('list')}
                             className={`px-4 py-1 text-xs rounded-md transition-colors ${view === 'list' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
                         >
                             List
                         </button>
                         <button
-                            onClick={() => setView('kanban')}
+                            onClick={() => handleViewChange('kanban')}
                             className={`px-4 py-1 text-xs rounded-md transition-colors ${view === 'kanban' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
                         >
                             Kanban
@@ -250,9 +319,18 @@ export default function WorkspacePage() {
                         )}
                     </>
                 ) : (
-                    <div className="flex items-center justify-center flex-1 bg-[#1e1f27] border border-gray-700 rounded-xl">
-                        <p className="text-gray-500 text-sm">Kanban — coming soon</p>
-                    </div>
+                    /* Kanban view */
+                    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                        <div className="flex gap-3 overflow-x-auto flex-1 pb-1">
+                            {(['Open', 'InProgress', 'Review', 'Closed'] as const).map(status => {
+                                const labels: Record<string, string> = { Open: 'Open', InProgress: 'In Progress', Review: 'Review', Closed: 'Closed' };
+                                return <DroppableColumn key={status} status={status} label={labels[status]} columnIssues={filteredIssues.filter(i => i.status === status)} />;
+                            })}
+                        </div>
+                        <DragOverlay>
+                            {activeIssue ? <KanbanCard issue={activeIssue} dragging /> : null}
+                        </DragOverlay>
+                    </DndContext>
                 )}
 
                 {/* New issue — persistent footer, always visible regardless of view */}
