@@ -9,7 +9,7 @@ import type { Project, Invitation, User, ProjectMember, UserSearchResult } from 
 
 export default function DashboardPage() {
     const { auth } = useAuth();
-    const { setProjects, setSelectedProject, selectedProject, setMyProjectRole, setProjectMembers } = useProject();
+    const { projects: contextProjects, setProjects, setSelectedProject, selectedProject, setMyProjectRole, setProjectMembers } = useProject();
     const navigate = useNavigate();
     const [projects, setLocalProjects] = useState<Project[]>([]);
     const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -31,6 +31,7 @@ export default function DashboardPage() {
     useEffect(() => {
         Promise.all([getProjects(), getPending()]).then(([p, i]) => {
             setLocalProjects(p);
+            setProjects(p);
             setInvitations(i);
             setLoading(false);
             p.forEach(proj => {
@@ -40,6 +41,18 @@ export default function DashboardPage() {
             });
         });
     }, []);
+
+    // Sync local list when a project is added via CreateProjectModal (which writes to context)
+    useEffect(() => {
+        if (contextProjects.length > projects.length) {
+            const newProject = contextProjects[contextProjects.length - 1];
+            setLocalProjects(contextProjects);
+            setAdminProjects(prev => prev.some(p => p.id === newProject.id) ? prev : [...prev, newProject]);
+            getMembers(newProject.id).then(members => {
+                setMemberMap(prev => ({ ...prev, [newProject.id]: members }));
+            });
+        }
+    }, [contextProjects]);
 
     useEffect(() => {
         if (selectedProject) {

@@ -51,6 +51,7 @@ export default function WorkspacePage() {
 
     const [assigneeOpen, setAssigneeOpen] = useState(false);
     const [detailAssigneeOpen, setDetailAssigneeOpen] = useState(false);
+    const [kanbanTab, setKanbanTab] = useState<'Open' | 'InProgress' | 'Review' | 'Closed'>('Open');
 
     useEffect(() => {
         if (!selectedProject) return;
@@ -344,7 +345,52 @@ export default function WorkspacePage() {
                 ) : (
                     /* Kanban view */
                     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                        <div className="flex gap-3 overflow-x-auto flex-1 pb-1">
+
+                        {/* Mobile tab-switcher (hidden on sm+) */}
+                        <div className="sm:hidden flex gap-1 mb-3 bg-[#13141a] border border-gray-700 rounded-xl p-1 shrink-0">
+                            {(['Open', 'InProgress', 'Review', 'Closed'] as const).map(status => {
+                                const labels: Record<string, string> = { Open: 'Open', InProgress: 'In Progress', Review: 'Review', Closed: 'Done' };
+                                const accentActive: Record<string, string> = { Open: 'bg-blue-500/20 text-blue-400', InProgress: 'bg-yellow-500/20 text-yellow-400', Review: 'bg-purple-500/20 text-purple-400', Closed: 'bg-green-500/20 text-green-400' };
+                                const count = filteredIssues.filter(i => i.status === status).length;
+                                return (
+                                    <button
+                                        key={status}
+                                        onClick={() => setKanbanTab(status)}
+                                        className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 ${kanbanTab === status ? accentActive[status] : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        {labels[status]}
+                                        {count > 0 && <span className="text-[10px] opacity-70">{count}</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Mobile: single column */}
+                        <div className="sm:hidden flex flex-col gap-2 overflow-y-auto flex-1 pb-1">
+                            {filteredIssues.filter(i => i.status === kanbanTab).map(issue => (
+                                <button
+                                    key={issue.id}
+                                    onClick={() => setSelectedIssue(issue)}
+                                    className={`bg-[#13141a] border rounded-lg px-3 py-2.5 text-left w-full transition-colors ${selectedIssue?.id === issue.id ? 'border-indigo-500' : 'border-gray-700 hover:border-indigo-500'}`}
+                                >
+                                    <p className="text-white text-xs font-medium mb-2 leading-snug">{issue.title}</p>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <PriorityBadge priority={issue.priority} />
+                                        {issue.assignedToName && (
+                                            <div title={issue.assignedToName} className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0" style={{ backgroundColor: colorByName[issue.assignedToName] ?? '#6366f1' }}>
+                                                {issue.assignedToName[0].toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+                                </button>
+                            ))}
+                            {filteredIssues.filter(i => i.status === kanbanTab).length === 0 && (
+                                <p className="text-gray-700 text-xs text-center py-8">No issues</p>
+                            )}
+                        </div>
+
+                        {/* Desktop: all columns side by side */}
+                        <div className="hidden sm:flex gap-3 overflow-x-auto flex-1 pb-1">
                             {(['Open', 'InProgress', 'Review', 'Closed'] as const).map(status => {
                                 const labels: Record<string, string> = { Open: 'Open', InProgress: 'In Progress', Review: 'Review', Closed: 'Closed' };
                                 return <DroppableColumn key={status} status={status} label={labels[status]} columnIssues={filteredIssues.filter(i => i.status === status)} />;
