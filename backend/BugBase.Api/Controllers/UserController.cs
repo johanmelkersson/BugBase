@@ -22,6 +22,15 @@ public class UserController(IUserService userService) : ControllerBase
         return Ok(users);
     }
 
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMeAsync()
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = await _userService.GetMeAsync(userId);
+        if (user == null) return NotFound();
+        return Ok(user);
+    }
+
     [HttpGet("search")]
     public async Task<IActionResult> SearchAsync([FromQuery] string username)
     {

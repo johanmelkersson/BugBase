@@ -32,3 +32,8 @@ export async function deleteUser(id: number): Promise<void> {
 export async function setCurrentProject(projectId: number | null): Promise<void> {
     await client.put('/api/user/current-project', { projectId });
 }
+
+export async function getMe(): Promise<{ token: string; username: string; role: string; email: string; currentProjectId: number | null }> {
+    const response = await client.get('/api/user/me');
+    return response.data;
+}

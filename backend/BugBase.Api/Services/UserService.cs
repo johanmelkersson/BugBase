@@ -11,6 +11,14 @@ public class UserService(AppDbContext context, IAuthService authService) : IUser
     private readonly AppDbContext _context = context;
     private readonly IAuthService _authService = authService;
 
+    public async Task<AuthResponseDto?> GetMeAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return null;
+        var token = _authService.GenerateToken(user);
+        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId);
+    }
+
     public async Task<List<UserResponseDto>> GetAllAsync()
     {
         var users = await _context.Users.ToListAsync();
