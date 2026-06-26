@@ -88,3 +88,13 @@ export interface ProjectMember {
   role: string;
   color: string;
 }
+
+export interface Notification {
+  notificationId: number;
+  type: 'Invitation' | 'IssueAssigned' | 'IssueComment';
+  message: string;
+  referenceId: number | null;
+  projectId: number | null;
+  isRead: boolean;
+  createdAt: string;
+}

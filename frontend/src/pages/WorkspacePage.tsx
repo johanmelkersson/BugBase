@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable, useDraggable, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,7 @@ import type { Issue, CreateIssue, Comment, UpdateIssue } from '../types';
 export default function WorkspacePage() {
     const { auth } = useAuth();
     const { selectedProject, setShowCreateModal, setMyProjectRole, projectMembers, setProjectMembers } = useProject();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [issues, setIssues] = useState<Issue[]>([]);
     const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
     const [view, setView] = useState<'list' | 'kanban'>(() => (localStorage.getItem('workspace-view') as 'list' | 'kanban') ?? 'kanban');
@@ -78,6 +80,17 @@ export default function WorkspacePage() {
         setComments([]);
         getDetail(selectedIssue.id).then(d => setComments(d.comments));
     }, [selectedIssue]);
+
+    // Open issue from notification link (?issue=123)
+    useEffect(() => {
+        const issueId = searchParams.get('issue');
+        if (!issueId || issues.length === 0) return;
+        const found = issues.find(i => i.id === Number(issueId));
+        if (found) {
+            setSelectedIssue(found);
+            setSearchParams({}, { replace: true });
+        }
+    }, [issues, searchParams, setSearchParams]);
 
     const PRIORITY_ORDER: Record<string, number> = { Low: 0, Medium: 1, High: 2, Critical: 3 };
 

@@ -6,9 +6,10 @@ using BugBase.Api.Models;
 
 namespace BugBase.Api.Services;
 
-public class InvitationService(AppDbContext context) : IInvitationService
+public class InvitationService(AppDbContext context, INotificationService notificationService) : IInvitationService
 {
     private readonly AppDbContext _context = context;
+    private readonly INotificationService _notifications = notificationService;
 
     public async Task<(ServiceResultStatus Status, InvitationResponseDto? Invitation)> SendAsync(SendInvitationDto dto, int senderId)
     {
@@ -48,6 +49,12 @@ public class InvitationService(AppDbContext context) : IInvitationService
 
         var project = await _context.Projects.FindAsync(dto.ProjectId);
         var sender = await _context.Users.FindAsync(senderId);
+
+        await _notifications.CreateAsync(
+            dto.InvitedUserId,
+            "Invitation",
+            $"{sender!.Username} invited you to join {project!.Name}",
+            invitation.Id);
 
         return (ServiceResultStatus.Success, new InvitationResponseDto(
             invitation.Id, invitation.ProjectId, project!.Name, sender!.Username,

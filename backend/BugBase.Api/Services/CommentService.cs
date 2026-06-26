@@ -6,9 +6,10 @@ using BugBase.Api.Models;
 
 namespace BugBase.Api.Services;
 
-public class CommentService(AppDbContext context) : ICommentService
+public class CommentService(AppDbContext context, INotificationService notificationService) : ICommentService
 {
     private readonly AppDbContext _context = context;
+    private readonly INotificationService _notifications = notificationService;
 
     public async Task<List<CommentResponseDto>> GetAllByIssueAsync(int issueId)
     {
@@ -54,6 +55,24 @@ public class CommentService(AppDbContext context) : ICommentService
 
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync();
+
+        var issue = await _context.Issues.FindAsync(dto.IssueId);
+        var commenter = await _context.Users.FindAsync(userId);
+
+        if (issue != null && commenter != null)
+        {
+            var shortContent = dto.Content.Length > 60 ? dto.Content[..60] + "…" : dto.Content;
+            var message = $"{commenter.Username} commented on \"{issue.Title}\": {shortContent}";
+
+            var notifyIds = new HashSet<int>();
+            if (issue.ReportedBy.HasValue && issue.ReportedBy.Value != userId)
+                notifyIds.Add(issue.ReportedBy.Value);
+            if (issue.AssignedTo.HasValue && issue.AssignedTo.Value != userId)
+                notifyIds.Add(issue.AssignedTo.Value);
+
+            foreach (var recipientId in notifyIds)
+                await _notifications.CreateAsync(recipientId, "IssueComment", message, issue.IssueId, issue.ProjectId);
+        }
 
         return await GetByIdAsync(comment.CommentId) ?? throw new Exception("Comment not found after creation");
     }

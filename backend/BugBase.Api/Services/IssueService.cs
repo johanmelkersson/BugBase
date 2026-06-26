@@ -6,9 +6,10 @@ using BugBase.Api.Models;
 
 namespace BugBase.Api.Services;
 
-public class IssueService(AppDbContext context) : IIssueService
+public class IssueService(AppDbContext context, INotificationService notificationService) : IIssueService
 {
     private readonly AppDbContext _context = context;
+    private readonly INotificationService _notifications = notificationService;
 
     public async Task<List<IssueResponseDto>> GetAllAsync(int? projectId)
     {
@@ -94,6 +95,17 @@ public class IssueService(AppDbContext context) : IIssueService
         _context.Issues.Add(issue);
         await _context.SaveChangesAsync();
 
+        if (createIssueDto.AssignedTo.HasValue && createIssueDto.AssignedTo.Value != userId)
+        {
+            var reporter = await _context.Users.FindAsync(userId);
+            await _notifications.CreateAsync(
+                createIssueDto.AssignedTo.Value,
+                "IssueAssigned",
+                $"{reporter?.Username ?? "Someone"} assigned you to \"{createIssueDto.Title}\"",
+                issue.IssueId,
+                issue.ProjectId);
+        }
+
         return await GetByIdAsync(issue.IssueId) ?? throw new Exception("Issue not found after creation");
     }
 
@@ -115,6 +127,9 @@ public class IssueService(AppDbContext context) : IIssueService
         if (updateIssueDto.Description != null) issue.Description = updateIssueDto.Description;
         if (updateIssueDto.Status != null) issue.Status = updateIssueDto.Status.Value;
         if (updateIssueDto.Priority != null) issue.Priority = updateIssueDto.Priority.Value;
+
+        int? previousAssignee = issue.AssignedTo;
+
         if (projectRole != ProjectMemberRole.Reporter)
         {
             if (updateIssueDto.ClearAssignee) issue.AssignedTo = null;
@@ -124,6 +139,18 @@ public class IssueService(AppDbContext context) : IIssueService
         issue.UpdatedBy = userId;
 
         await _context.SaveChangesAsync();
+
+        // Notify new assignee if changed
+        if (issue.AssignedTo.HasValue && issue.AssignedTo != previousAssignee && issue.AssignedTo != userId)
+        {
+            var updater = await _context.Users.FindAsync(userId);
+            await _notifications.CreateAsync(
+                issue.AssignedTo.Value,
+                "IssueAssigned",
+                $"{updater?.Username ?? "Someone"} assigned you to \"{issue.Title}\"",
+                issue.IssueId,
+                issue.ProjectId);
+        }
 
         return (ServiceResultStatus.Success, await GetByIdAsync(issue.IssueId));
     }

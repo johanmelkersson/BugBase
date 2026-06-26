@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Issue> Issues { get; set; }
     public DbSet<Comment> Comments { get; set; }
     public DbSet<ProjectMember> ProjectMembers { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     // Called once on startup — EF Core builds and caches the model from these instructions
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -84,6 +85,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(c => c.UserId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Notification>().Property(n => n.Type).HasConversion<string>();
 
         // Store enums as strings instead of integers for database readability
         modelBuilder.Entity<Issue>().Property(i => i.Status).HasConversion<string>();
