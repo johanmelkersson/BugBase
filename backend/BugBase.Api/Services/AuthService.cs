@@ -15,6 +15,12 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
     private readonly AppDbContext _context = context;
     private readonly IConfiguration _configuration = configuration;
 
+    private static readonly string[] AvatarColors = [
+        "#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e",
+        "#f97316", "#eab308", "#22c55e", "#10b981", "#14b8a6",
+        "#06b6d4", "#3b82f6"
+    ];
+
     public string GenerateToken(User user) => GenerateJwtToken(user);
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
@@ -28,6 +34,7 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
             Email = registerDto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
             Role = await _context.Users.AnyAsync() ? UserRole.User : UserRole.Admin,
+            Color = AvatarColors[Random.Shared.Next(AvatarColors.Length)],
             CreatedAt = DateTime.UtcNow
         };
 
@@ -35,7 +42,7 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         await _context.SaveChangesAsync();
 
         var token = GenerateJwtToken(user);
-        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, null);
+        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, null, user.Color);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
@@ -45,7 +52,7 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
             throw new Exception("Invalid email or password.");
 
         var token = GenerateJwtToken(user);
-        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId);
+        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId, user.Color);
     }
 
     private string GenerateJwtToken(User user)

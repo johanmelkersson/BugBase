@@ -15,6 +15,7 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty; // Stored as a bcrypt hash, never plaintext
     public UserRole Role { get; set; }
+    public string Color { get; set; } = "#6366f1";
     public DateTime CreatedAt { get; set; }
     public int? CurrentProjectId { get; set; }
 

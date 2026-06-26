@@ -38,7 +38,7 @@ export default function SettingsPage() {
             if (username !== auth?.username) data.username = username;
             if (email !== auth?.email) data.email = email;
             const response = await updateProfile(data);
-            login(response.token, response.username, response.role, response.email);
+            login(response.token, response.username, response.role, response.email, null, response.color);
             setProfileSuccess(true);
             setTimeout(() => setProfileSuccess(false), 3000);
         } catch {
@@ -53,7 +53,7 @@ export default function SettingsPage() {
         if (newPassword.length < 6) { setPasswordError('Password must be at least 6 characters.'); return; }
         try {
             const response = await updateProfile({ currentPassword, password: newPassword });
-            login(response.token, response.username, response.role, response.email);
+            login(response.token, response.username, response.role, response.email, null, response.color);
             setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
             setPasswordSuccess(true);
             setTimeout(() => setPasswordSuccess(false), 3000);
@@ -189,6 +189,30 @@ export default function SettingsPage() {
                             </form>
                         </div>
 
+                        {/* Avatar color */}
+                        <div className="bg-[#1e1f27] border border-gray-700 rounded-xl p-6">
+                            <h2 className="text-white font-medium text-sm mb-1">Avatar color</h2>
+                            <p className="text-gray-500 text-xs mb-4">Choose the color used for your avatar across all projects.</p>
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0" style={{ backgroundColor: auth?.color ?? '#6366f1' }}>
+                                    {auth?.username[0].toUpperCase()}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {['#6366f1','#8b5cf6','#a855f7','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#10b981','#14b8a6','#06b6d4','#3b82f6'].map(c => (
+                                        <button
+                                            key={c}
+                                            onClick={async () => {
+                                                const response = await updateProfile({ color: c });
+                                                login(response.token, response.username, response.role, response.email, null, response.color);
+                                            }}
+                                            className={`w-7 h-7 rounded-full transition-transform hover:scale-110 ${auth?.color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-[#1e1f27]' : ''}`}
+                                            style={{ backgroundColor: c }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Delete account */}
                         <div className="bg-[#1e1f27] border border-red-900/40 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
@@ -255,7 +279,7 @@ export default function SettingsPage() {
                             </button>
                             <button onClick={async () => {
                                 const response = await updateProfile({ role: 'User' });
-                                login(response.token, response.username, response.role, response.email);
+                                login(response.token, response.username, response.role, response.email, null, response.color);
                                 setShowDowngradeConfirm(false);
                                 navigate('/dashboard');
                             }}

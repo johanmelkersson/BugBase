@@ -95,7 +95,7 @@ export default function InvitePopout() {
                         return (
                             <div key={u.id} className={`flex items-center justify-between gap-2 ${isPending ? 'opacity-50' : ''}`}>
                                 <div className="flex items-center gap-2 min-w-0">
-                                    <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0" style={{ backgroundColor: u.color }}>
                                         {u.username[0].toUpperCase()}
                                     </div>
                                     <span className="text-gray-300 text-xs truncate">{u.username}</span>

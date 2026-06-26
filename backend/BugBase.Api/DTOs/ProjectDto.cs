@@ -6,6 +6,6 @@ public record UpdateProjectDto(string? Name, string? Description);
 
 public record ProjectResponseDto(int Id, string Name, string Description, DateTime CreatedAt, int CreatedBy);
 
-public record ProjectMemberDto(int Id, string Username, string Role);
+public record ProjectMemberDto(int Id, string Username, string Role, string Color);
 
 public record UpdateMemberRoleDto(string Role);

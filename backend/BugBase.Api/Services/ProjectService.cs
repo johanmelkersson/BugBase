@@ -38,7 +38,7 @@ public class ProjectService(AppDbContext context) : IProjectService
         return await _context.ProjectMembers
             .Where(pm => pm.ProjectId == projectId)
             .Include(pm => pm.User)
-            .Select(pm => new ProjectMemberDto(pm.User.UserId, pm.User.Username, pm.Role.ToString()))
+            .Select(pm => new ProjectMemberDto(pm.User.UserId, pm.User.Username, pm.Role.ToString(), pm.User.Color))
             .ToListAsync();
     }
 

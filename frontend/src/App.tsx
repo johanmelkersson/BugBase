@@ -14,7 +14,7 @@ import SettingsPage from './pages/SettingsPage';
 import CreateProjectModal from './components/CreateProjectModal';
 
 function AppInit() {
-    const { auth } = useAuth();
+    const { auth, login } = useAuth();
     const { setProjects, setSelectedProject } = useProject();
 
     useEffect(() => {
@@ -22,6 +22,7 @@ function AppInit() {
         (async () => {
             try {
                 const [me, projects] = await Promise.all([getMe(), getProjects()]);
+                login(me.token, me.username, me.role, me.email, me.currentProjectId, me.color);
                 setProjects(projects);
                 if (me.currentProjectId) {
                     const found = projects.find(p => p.id === me.currentProjectId);

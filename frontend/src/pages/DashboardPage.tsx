@@ -223,8 +223,8 @@ export default function DashboardPage() {
                     <div
                         key={m.id}
                         title={`${m.username} (${m.role})`}
-                        style={{ zIndex: visible.length - i }}
-                        className="-ml-2 first:ml-0 w-6 h-6 rounded-full bg-indigo-700 border border-[#1e1f27] flex items-center justify-center text-[10px] text-white font-medium"
+                        style={{ zIndex: visible.length - i, backgroundColor: m.color }}
+                        className="-ml-2 first:ml-0 w-6 h-6 rounded-full border border-[#1e1f27] flex items-center justify-center text-[10px] text-white font-medium"
                     >
                         {m.username[0].toUpperCase()}
                     </div>
@@ -304,7 +304,7 @@ export default function DashboardPage() {
                                 return (
                                     <div key={m.id} className="bg-[#1e1f27] border border-gray-700 rounded-xl px-5 py-3 flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-7 h-7 rounded-full bg-indigo-700 flex items-center justify-center text-xs text-white font-medium shrink-0">
+                                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs text-white font-medium shrink-0" style={{ backgroundColor: m.color }}>
                                                 {m.username[0].toUpperCase()}
                                             </div>
                                             <span className="text-white text-sm">{m.username}{isSelf && <span className="text-gray-500 text-xs ml-1">(you)</span>}</span>
@@ -342,7 +342,7 @@ export default function DashboardPage() {
                                     <div className="bg-[#1e1f27] border border-dashed border-gray-600 rounded-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
                                         <div className="flex items-center gap-2 flex-1 min-w-0">
                                             {selectedInvitee && (
-                                                <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0" style={{ backgroundColor: selectedInvitee.color }}>
                                                     {selectedInvitee.username[0].toUpperCase()}
                                                 </div>
                                             )}
@@ -384,7 +384,7 @@ export default function DashboardPage() {
                                                         className={`w-full px-4 py-2.5 flex items-center justify-between gap-3 transition-colors ${isPending ? 'opacity-50 cursor-default' : 'hover:bg-[#13141a]'}`}
                                                     >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                                                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0" style={{ backgroundColor: u.color }}>
                                                                 {u.username[0].toUpperCase()}
                                                             </div>
                                                             <span className="text-gray-200 text-sm">{u.username}</span>

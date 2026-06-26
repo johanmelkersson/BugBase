@@ -50,8 +50,8 @@ export default function Navbar() {
                 <div
                     key={m.id}
                     title={`${m.username} (${m.role})`}
-                    style={{ zIndex: 5 - i, marginLeft: i === 0 ? 0 : '-6px' }}
-                    className="w-6 h-6 rounded-full bg-indigo-700 border border-[#1e1f27] flex items-center justify-center text-[10px] text-white font-medium shrink-0"
+                    style={{ zIndex: 5 - i, marginLeft: i === 0 ? 0 : '-6px', backgroundColor: m.color }}
+                    className="w-6 h-6 rounded-full border border-[#1e1f27] flex items-center justify-center text-[10px] text-white font-medium shrink-0"
                 >
                     {m.username[0].toUpperCase()}
                 </div>
@@ -96,7 +96,7 @@ export default function Navbar() {
                         onClick={() => navigate('/settings?section=profile')}
                         className="flex items-center gap-2 hover:bg-white/5 rounded-lg px-2 py-1 transition-colors group"
                     >
-                        <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[11px] text-white font-medium shrink-0">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] text-white font-medium shrink-0" style={{ backgroundColor: auth?.color ?? '#6366f1' }}>
                             {auth?.username?.[0].toUpperCase()}
                         </div>
                         <span className="text-gray-400 group-hover:text-white text-sm transition-colors">{auth?.username}</span>
@@ -114,7 +114,7 @@ export default function Navbar() {
                 <div className="flex sm:hidden items-center gap-3">
                     <button
                         onClick={() => navigate('/settings?section=profile')}
-                        className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[11px] text-white font-medium shrink-0"
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] text-white font-medium shrink-0" style={{ backgroundColor: auth?.color ?? '#6366f1' }}
                     >
                         {auth?.username?.[0].toUpperCase()}
                     </button>

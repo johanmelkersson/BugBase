@@ -18,7 +18,7 @@ export default function LoginPage() {
         e.preventDefault();
         try {
             const response = await loginApi(email, password);
-            const savedProjectId = login(response.token, response.username, response.role, response.email, response.currentProjectId);
+            const savedProjectId = login(response.token, response.username, response.role, response.email, response.currentProjectId, response.color);
             const projects = await getProjects();
             setProjects(projects);
             if (savedProjectId) {

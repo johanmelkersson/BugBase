@@ -16,7 +16,7 @@ export async function searchUsers(username: string): Promise<UserSearchResult[]>
   return response.data;
 }
 
-export async function updateProfile(data: { username?: string; email?: string; password?: string; role?: string; currentPassword?: string }) {
+export async function updateProfile(data: { username?: string; email?: string; password?: string; role?: string; currentPassword?: string; color?: string }) {
     const response = await client.put('/api/user/profile', data);
     return response.data;
 }
@@ -33,7 +33,7 @@ export async function setCurrentProject(projectId: number | null): Promise<void>
     await client.put('/api/user/current-project', { projectId });
 }
 
-export async function getMe(): Promise<{ token: string; username: string; role: string; email: string; currentProjectId: number | null }> {
+export async function getMe(): Promise<{ token: string; username: string; role: string; email: string; currentProjectId: number | null; color: string }> {
     const response = await client.get('/api/user/me');
     return response.data;
 }

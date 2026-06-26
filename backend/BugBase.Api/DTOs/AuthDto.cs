@@ -4,8 +4,8 @@ public record RegisterDto(string Username, string Email, string Password);
 
 public record LoginDto(string Email, string Password);
 
-public record UpdateProfileDto(string? Username, string? Email, string? Password, string? Role, string? CurrentPassword);
+public record UpdateProfileDto(string? Username, string? Email, string? Password, string? Role, string? CurrentPassword, string? Color);
 
-public record AuthResponseDto(string Token, string Username, string Role, string Email, int? CurrentProjectId);
+public record AuthResponseDto(string Token, string Username, string Role, string Email, int? CurrentProjectId, string Color);
 
 public record SetCurrentProjectDto(int? ProjectId);

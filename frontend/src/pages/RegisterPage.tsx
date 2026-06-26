@@ -17,7 +17,7 @@ export default function RegisterPage() {
         e.preventDefault();
         try {
             const response = await registerApi(username, email, password);
-            login(response.token, response.username, response.role, response.email);
+            login(response.token, response.username, response.role, response.email, null, response.color);
             navigate('/dashboard');
         } catch (error: any) {
             setError(error.response?.data?.message || 'Registration failed');

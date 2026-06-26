@@ -16,13 +16,13 @@ public class UserService(AppDbContext context, IAuthService authService) : IUser
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return null;
         var token = _authService.GenerateToken(user);
-        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId);
+        return new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId, user.Color);
     }
 
     public async Task<List<UserResponseDto>> GetAllAsync()
     {
         var users = await _context.Users.ToListAsync();
-        return [.. users.Select(u => new UserResponseDto(u.UserId, u.Username, u.Email, u.Role.ToString()))];
+        return [.. users.Select(u => new UserResponseDto(u.UserId, u.Username, u.Email, u.Role.ToString(), u.Color))];
     }
 
     public async Task<List<UserResponseDto>> SearchByUsernameAsync(string username)
@@ -32,7 +32,7 @@ public class UserService(AppDbContext context, IAuthService authService) : IUser
             .Take(10)
             .ToListAsync();
 
-        return [.. users.Select(u => new UserResponseDto(u.UserId, u.Username, u.Email, u.Role.ToString()))];
+        return [.. users.Select(u => new UserResponseDto(u.UserId, u.Username, u.Email, u.Role.ToString(), u.Color))];
     }
 
     public async Task<UserResponseDto?> UpdateRoleAsync(int id, UpdateUserRoleDto updateUserDto)
@@ -44,7 +44,7 @@ public class UserService(AppDbContext context, IAuthService authService) : IUser
 
         await _context.SaveChangesAsync();
 
-        return new UserResponseDto(user.UserId, user.Username, user.Email, user.Role.ToString());
+        return new UserResponseDto(user.UserId, user.Username, user.Email, user.Role.ToString(), user.Color);
     }
 
     public async Task<(ServiceResultStatus Status, AuthResponseDto? Response)> UpdateProfileAsync(int userId, UpdateProfileDto dto)
@@ -61,11 +61,12 @@ public class UserService(AppDbContext context, IAuthService authService) : IUser
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
         }
         if (dto.Role != null && Enum.TryParse<UserRole>(dto.Role, out var role)) user.Role = role;
+        if (dto.Color != null) user.Color = dto.Color;
 
         await _context.SaveChangesAsync();
 
         var token = _authService.GenerateToken(user);
-        return (ServiceResultStatus.Success, new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId));
+        return (ServiceResultStatus.Success, new AuthResponseDto(token, user.Username, user.Role.ToString(), user.Email, user.CurrentProjectId, user.Color));
     }
 
     public async Task<ServiceResultStatus> SetCurrentProjectAsync(int userId, int? projectId)

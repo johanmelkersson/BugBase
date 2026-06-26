@@ -40,6 +40,8 @@ export default function WorkspacePage() {
 
     const roleOrder: Record<string, number> = { Owner: 0, Developer: 1, Reporter: 2 };
     const sortedMembers = useMemo(() => [...projectMembers].sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9)), [projectMembers]);
+    const colorById = useMemo(() => Object.fromEntries(projectMembers.map(m => [m.id, m.color])), [projectMembers]);
+    const colorByName = useMemo(() => Object.fromEntries(projectMembers.map(m => [m.username, m.color])), [projectMembers]);
     const myProjectRole = useMemo(() => projectMembers.find(m => m.id === auth?.userId)?.role ?? null, [projectMembers, auth]);
     const canEditIssueText = myProjectRole === 'Owner' || myProjectRole === 'Developer' || selectedIssue?.reportedById === auth?.userId;
     const canAssign = myProjectRole === 'Owner' || myProjectRole === 'Developer';
@@ -177,7 +179,7 @@ export default function WorkspacePage() {
                 <div className="flex items-center justify-between gap-2">
                     <PriorityBadge priority={issue.priority} />
                     {issue.assignedToName && (
-                        <div title={issue.assignedToName} className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                        <div title={issue.assignedToName} className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0" style={{ backgroundColor: colorByName[issue.assignedToName] ?? '#6366f1' }}>
                             {issue.assignedToName[0].toUpperCase()}
                         </div>
                     )}
@@ -286,7 +288,7 @@ export default function WorkspacePage() {
                                     <p className="text-white text-xs font-medium truncate flex-1">{issue.title}</p>
                                     <div className="flex items-center gap-2 shrink-0">
                                         {issue.assignedToName && (
-                                            <div title={issue.assignedToName} className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium">
+                                            <div title={issue.assignedToName} className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-medium" style={{ backgroundColor: colorByName[issue.assignedToName] ?? '#6366f1' }}>
                                                 {issue.assignedToName[0].toUpperCase()}
                                             </div>
                                         )}
@@ -377,7 +379,7 @@ export default function WorkspacePage() {
                                     <div className="relative flex items-center" style={{ height: '30px' }}>
                                         {form.assignedTo ? (
                                             <div className="flex items-center gap-1.5 bg-[#1e1f27] border border-gray-700 rounded-full pl-1 pr-2 py-0.5">
-                                                <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[9px] text-white font-medium shrink-0">
+                                                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-medium shrink-0" style={{ backgroundColor: colorById[form.assignedTo!] ?? '#6366f1' }}>
                                                     {projectMembers.find(m => m.id === form.assignedTo)?.username[0].toUpperCase()}
                                                 </div>
                                                 <span className="text-gray-200 text-xs truncate max-w-[60px]">{projectMembers.find(m => m.id === form.assignedTo)?.username}</span>
@@ -405,7 +407,7 @@ export default function WorkspacePage() {
                                                         onClick={() => { setForm(prev => ({ ...prev, assignedTo: m.id })); setAssigneeOpen(false); }}
                                                         className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 transition-colors text-left"
                                                     >
-                                                        <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                                                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0" style={{ backgroundColor: m.color }}>
                                                             {m.username[0].toUpperCase()}
                                                         </div>
                                                         <span className="text-gray-300 text-xs">{m.username}</span>
@@ -534,7 +536,7 @@ export default function WorkspacePage() {
                                     ) : <div className="relative">
                                         {selectedIssue.assignedToName ? (
                                             <div className="flex items-center gap-1.5 bg-[#13141a] border border-gray-700 rounded-full pl-1 pr-2 py-0.5">
-                                                <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[9px] text-white font-medium shrink-0">
+                                                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-medium shrink-0" style={{ backgroundColor: colorByName[selectedIssue.assignedToName] ?? '#6366f1' }}>
                                                     {selectedIssue.assignedToName[0].toUpperCase()}
                                                 </div>
                                                 <button
@@ -574,7 +576,7 @@ export default function WorkspacePage() {
                                                         }}
                                                         className={`w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 transition-colors text-left ${selectedIssue.assignedToName === m.username ? 'bg-white/5' : ''}`}
                                                     >
-                                                        <div className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] text-white font-medium shrink-0">
+                                                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0" style={{ backgroundColor: m.color }}>
                                                             {m.username[0].toUpperCase()}
                                                         </div>
                                                         <span className="text-gray-300 text-xs">{m.username}</span>
@@ -594,7 +596,7 @@ export default function WorkspacePage() {
                                     {selectedIssue.updatedByName && (
                                         <div className="flex items-center gap-1.5">
                                             <span>Updated: <span className="text-gray-300">{new Date(selectedIssue.updatedAt).toLocaleDateString()}</span></span>
-                                            <div title={selectedIssue.updatedByName} className="w-5 h-5 rounded-full bg-indigo-700 flex items-center justify-center text-[9px] text-white font-medium shrink-0">
+                                            <div title={selectedIssue.updatedByName} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-medium shrink-0" style={{ backgroundColor: colorByName[selectedIssue.updatedByName!] ?? '#6366f1' }}>
                                                 {selectedIssue.updatedByName[0].toUpperCase()}
                                             </div>
                                         </div>
@@ -612,7 +614,7 @@ export default function WorkspacePage() {
                                     const isOwn = c.authorId === auth?.userId;
                                     return (
                                         <div key={c.id} className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-                                            <div title={c.authorName ?? 'Deleted user'} className={`w-6 h-6 rounded-full ${c.authorName ? 'bg-indigo-700' : 'bg-gray-600'} flex items-center justify-center text-[10px] text-white font-medium shrink-0 mt-0.5`}>
+                                            <div title={c.authorName ?? 'Deleted user'} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-medium shrink-0 mt-0.5" style={{ backgroundColor: c.authorName ? (colorById[c.authorId!] ?? '#6366f1') : '#4b5563' }}>
                                                 {c.authorName ? c.authorName[0].toUpperCase() : '?'}
                                             </div>
                                             <div className={`flex flex-col gap-1 max-w-[80%] ${isOwn ? 'items-end' : 'items-start'}`}>
@@ -631,7 +633,7 @@ export default function WorkspacePage() {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className={`group relative px-3 py-2 rounded-2xl text-xs text-gray-200 ${isOwn ? 'bg-indigo-700 rounded-tr-sm' : 'bg-[#13141a] rounded-tl-sm'}`}>
+                                                    <div className={`group relative px-3 py-2 rounded-2xl text-xs text-gray-200 ${isOwn ? 'rounded-tr-sm' : 'bg-[#13141a] rounded-tl-sm'}`} style={isOwn ? { backgroundColor: auth?.color ?? '#6366f1' } : undefined}>
                                                         {c.content}
                                                         {(isOwn || myProjectRole === 'Owner') && (
                                                             <div className="absolute -bottom-4 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

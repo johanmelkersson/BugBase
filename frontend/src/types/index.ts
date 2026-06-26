@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   role: string;
+  color: string;
 }
 
 export interface Project {
@@ -74,6 +75,7 @@ export interface UserSearchResult {
   username: string;
   email: string;
   role: string;
+  color: string;
 }
 
 export interface IssueDetail extends Issue {
@@ -84,4 +86,5 @@ export interface ProjectMember {
   id: number;
   username: string;
   role: string;
+  color: string;
 }
