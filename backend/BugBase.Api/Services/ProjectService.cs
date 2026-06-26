@@ -128,6 +128,16 @@ public class ProjectService(AppDbContext context) : IProjectService
         if (target == null) return ServiceResultStatus.NotFound;
 
         target.Role = role;
+
+        if (role == ProjectMemberRole.Reporter)
+        {
+            var assignedIssues = await _context.Issues
+                .Where(i => i.ProjectId == projectId && i.AssignedTo == targetUserId)
+                .ToListAsync();
+            foreach (var issue in assignedIssues)
+                issue.AssignedTo = null;
+        }
+
         await _context.SaveChangesAsync();
         return ServiceResultStatus.Success;
     }

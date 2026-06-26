@@ -42,6 +42,7 @@ export default function WorkspacePage() {
     const sortedMembers = useMemo(() => [...projectMembers].sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9)), [projectMembers]);
     const colorById = useMemo(() => Object.fromEntries(projectMembers.map(m => [m.id, m.color])), [projectMembers]);
     const colorByName = useMemo(() => Object.fromEntries(projectMembers.map(m => [m.username, m.color])), [projectMembers]);
+    const assignableMembers = useMemo(() => sortedMembers.filter(m => m.role !== 'Reporter'), [sortedMembers]);
     const myProjectRole = useMemo(() => projectMembers.find(m => m.id === auth?.userId)?.role ?? null, [projectMembers, auth]);
     const canEditIssueText = myProjectRole === 'Owner' || myProjectRole === 'Developer' || selectedIssue?.reportedById === auth?.userId;
     const canAssign = myProjectRole === 'Owner' || myProjectRole === 'Developer';
@@ -200,10 +201,17 @@ export default function WorkspacePage() {
         );
     }
 
+    const statusAccent: Record<string, string> = {
+        Open: 'border-t-blue-500',
+        InProgress: 'border-t-yellow-500',
+        Review: 'border-t-purple-500',
+        Closed: 'border-t-green-500',
+    };
+
     function DroppableColumn({ status, label, columnIssues }: { status: string; label: string; columnIssues: Issue[] }) {
         const { setNodeRef, isOver } = useDroppable({ id: status });
         return (
-            <div className={`flex flex-col min-w-[200px] flex-1 border rounded-xl overflow-hidden transition-colors ${isOver ? 'border-indigo-500 bg-indigo-500/5' : 'border-gray-700 bg-[#1e1f27]'}`}>
+            <div className={`flex flex-col min-w-[200px] flex-1 border border-t-2 rounded-xl overflow-hidden transition-colors ${statusAccent[status]} ${isOver ? 'border-indigo-500 bg-indigo-500/5' : 'border-gray-700 bg-[#1e1f27]'}`}>
                 <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-700 shrink-0">
                     <span className="text-xs font-semibold text-gray-300">{label}</span>
                     <span className="text-xs text-gray-500 bg-[#13141a] rounded-full px-2 py-0.5">{columnIssues.length}</span>
@@ -400,7 +408,7 @@ export default function WorkspacePage() {
                                         )}
                                         {assigneeOpen && (
                                             <div className="absolute bottom-full mb-1 left-0 bg-[#13141a] border border-gray-700 rounded-lg shadow-xl z-30 py-1 min-w-[140px]">
-                                                {sortedMembers.map(m => (
+                                                {assignableMembers.map(m => (
                                                     <button
                                                         key={m.id}
                                                         type="button"
@@ -565,7 +573,7 @@ export default function WorkspacePage() {
                                         )}
                                         {detailAssigneeOpen && (
                                             <div className="absolute top-full mt-1 right-0 bg-[#13141a] border border-gray-700 rounded-lg shadow-xl z-30 py-1 min-w-[140px]">
-                                                {sortedMembers.map(m => (
+                                                {assignableMembers.map(m => (
                                                     <button
                                                         key={m.id}
                                                         onClick={async () => {
