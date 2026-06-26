@@ -16,12 +16,12 @@ public class AuthController(IAuthService authService) : ControllerBase
         try
         {
             var result = await _authService.RegisterAsync(registerDto);
-            return Ok(result);
+            return Created("/api/auth/register", result);
         }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
-        }   
+        }
     }
 
     [HttpPost("login")]
