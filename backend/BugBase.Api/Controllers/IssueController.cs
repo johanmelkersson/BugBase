@@ -20,9 +20,9 @@ public class IssueController(IIssueService issueService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<IssueResponseDto>> GetByIdAsync(int id)
+    public async Task<ActionResult<IssueDetailDto>> GetByIdAsync(int id)
     {
-        var issue = await _issueService.GetByIdAsync(id);
+        var issue = await _issueService.GetDetailAsync(id);
         if (issue == null) return NotFound();
         return Ok(issue);
     }

@@ -1,5 +1,5 @@
 import client from './client';
-import type { Issue, UpdateIssue } from '../types';
+import type { Issue, IssueDetail, UpdateIssue } from '../types';
 
 export async function getAll(projectId: number): Promise<Issue[]> {
     const response = await client.get('/api/issue', { params: { projectId } });
@@ -7,6 +7,11 @@ export async function getAll(projectId: number): Promise<Issue[]> {
 }
 
 export async function getById(id: number): Promise<Issue> {
+    const response = await client.get(`/api/issue/${id}`);
+    return response.data;
+}
+
+export async function getDetail(id: number): Promise<IssueDetail> {
     const response = await client.get(`/api/issue/${id}`);
     return response.data;
 }

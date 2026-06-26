@@ -46,6 +46,29 @@ public class IssueService(AppDbContext context) : IIssueService
             issue.UpdatedByUser?.Username, issue.CreatedAt, issue.UpdatedAt);
     }
 
+    public async Task<IssueDetailDto?> GetDetailAsync(int id)
+    {
+        var issue = await _context.Issues
+            .Include(i => i.ReportedByUser)
+            .Include(i => i.AssignedToUser)
+            .Include(i => i.UpdatedByUser)
+            .Include(i => i.Comments).ThenInclude(c => c.User)
+            .FirstOrDefaultAsync(i => i.IssueId == id);
+
+        if (issue == null) return null;
+
+        var comments = issue.Comments
+            .OrderBy(c => c.CreatedAt)
+            .Select(c => new CommentResponseDto(c.CommentId, c.IssueId, c.Content, c.UserId, c.User?.Username, c.CreatedAt, c.UpdatedAt))
+            .ToList();
+
+        return new IssueDetailDto(
+            issue.IssueId, issue.ProjectId, issue.Title, issue.Description,
+            issue.Status.ToString(), issue.Priority.ToString(),
+            issue.ReportedBy, issue.ReportedByUser?.Username, issue.AssignedToUser?.Username,
+            issue.UpdatedByUser?.Username, issue.CreatedAt, issue.UpdatedAt, comments);
+    }
+
     private async Task<ProjectMemberRole?> GetProjectRoleAsync(int userId, int projectId)
     {
         var member = await _context.ProjectMembers

@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
-import { getAll as getIssues, create as createIssue, update as updateIssue, deleteIssue } from '../api/issues';
-import { getAll as getComments, create as createComment, update as updateComment, deleteComment } from '../api/comments';
+import { getAll as getIssues, getDetail, create as createIssue, update as updateIssue, deleteIssue } from '../api/issues';
+import { create as createComment, update as updateComment, deleteComment } from '../api/comments';
 import { getMembers } from '../api/projects';
 import { StatusBadge, PriorityBadge } from '../components/Badges';
 import IssueFilters, { type IssueFilterState } from '../components/IssueFilters';
@@ -47,7 +47,6 @@ export default function WorkspacePage() {
     useEffect(() => {
         if (!selectedProject) return;
         setSelectedIssue(null);
-        setIssues([]);
         getIssues(selectedProject.id).then(setIssues);
         getMembers(selectedProject.id).then(m => {
             setProjectMembers(m);
@@ -70,7 +69,8 @@ export default function WorkspacePage() {
         if (!selectedIssue) { setComments([]); return; }
         setEditMode(false);
         setDetailAssigneeOpen(false);
-        getComments(selectedIssue.id).then(setComments);
+        setComments([]);
+        getDetail(selectedIssue.id).then(d => setComments(d.comments));
     }, [selectedIssue]);
 
     const PRIORITY_ORDER: Record<string, number> = { Low: 0, Medium: 1, High: 2, Critical: 3 };

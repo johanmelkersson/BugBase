@@ -13,6 +13,7 @@ export default function DashboardPage() {
     const navigate = useNavigate();
     const [projects, setLocalProjects] = useState<Project[]>([]);
     const [invitations, setInvitations] = useState<Invitation[]>([]);
+    const [loading, setLoading] = useState(true);
     const [dashboardView, setDashboardView] = useState<'user' | 'admin'>('user');
     const [adminUsers, setAdminUsers] = useState<User[]>([]);
     const [adminProjects, setAdminProjects] = useState<Project[]>([]);
@@ -28,11 +29,15 @@ export default function DashboardPage() {
     const inviteRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        Promise.all([getProjects(), getPending()]).then(async ([p, i]) => {
+        Promise.all([getProjects(), getPending()]).then(([p, i]) => {
             setLocalProjects(p);
             setInvitations(i);
-            const entries = await Promise.all(p.map(async proj => [proj.id, await getMembers(proj.id)] as const));
-            setMemberMap(Object.fromEntries(entries));
+            setLoading(false);
+            p.forEach(proj => {
+                getMembers(proj.id).then(members => {
+                    setMemberMap(prev => ({ ...prev, [proj.id]: members }));
+                });
+            });
         });
     }, []);
 
@@ -232,6 +237,12 @@ export default function DashboardPage() {
             </div>
         );
     }
+
+    if (loading) return (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex items-center justify-center">
+            <span className="text-gray-500 text-sm">Loading...</span>
+        </div>
+    );
 
     return (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-10">

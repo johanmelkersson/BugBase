@@ -76,6 +76,10 @@ export interface UserSearchResult {
   role: string;
 }
 
+export interface IssueDetail extends Issue {
+  comments: Comment[];
+}
+
 export interface ProjectMember {
   id: number;
   username: string;
