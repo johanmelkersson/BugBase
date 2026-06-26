@@ -100,6 +100,12 @@ public class UserService(AppDbContext context, IAuthService authService) : IUser
             .ToListAsync();
         _context.Projects.RemoveRange(projects);
 
+        // Remove memberships in projects the user does not own
+        var otherMemberships = await _context.ProjectMembers
+            .Where(pm => pm.UserId == userId && pm.Role != ProjectMemberRole.Owner)
+            .ToListAsync();
+        _context.ProjectMembers.RemoveRange(otherMemberships);
+
         await _context.SaveChangesAsync();
 
         // Re-fetch user after cascades have run

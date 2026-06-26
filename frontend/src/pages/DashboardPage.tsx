@@ -529,6 +529,8 @@ export default function DashboardPage() {
                                     <button onClick={async () => {
                                         await deleteProject(project.id);
                                         setAdminProjects(prev => prev.filter(p => p.id !== project.id));
+                                        setLocalProjects(projects.filter(p => p.id !== project.id));
+                                        setProjects(projects.filter(p => p.id !== project.id));
                                         if (selectedProject?.id === project.id) setSelectedProject(null);
                                     }}
                                         className="text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-lg px-3 py-1.5 text-xs transition-colors">
