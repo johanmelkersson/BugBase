@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import Markdown from 'react-markdown';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable, useDraggable, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
@@ -545,7 +546,9 @@ export default function WorkspacePage() {
                                 ) : (
                                     <>
                                         <h2 className="text-white font-semibold text-sm mb-1">{selectedIssue.title}</h2>
-                                        <p className="text-gray-400 text-xs">{selectedIssue.description}</p>
+                                        <div className="text-gray-400 text-xs prose prose-invert prose-xs max-w-none prose-p:my-1 prose-headings:text-gray-300 prose-headings:font-semibold prose-code:bg-[#13141a] prose-code:px-1 prose-code:rounded prose-pre:bg-[#13141a] prose-pre:border prose-pre:border-gray-700 prose-a:text-indigo-400 prose-li:my-0">
+                                            <Markdown>{selectedIssue.description}</Markdown>
+                                        </div>
                                     </>
                                 )}
                             </div>
@@ -701,7 +704,9 @@ export default function WorkspacePage() {
                                                     </div>
                                                 ) : (
                                                     <div className={`group relative px-3 py-2 rounded-2xl text-xs text-gray-200 ${isOwn ? 'rounded-tr-sm' : 'bg-[#13141a] rounded-tl-sm'}`} style={isOwn ? { backgroundColor: auth?.color ?? '#6366f1' } : undefined}>
-                                                        {c.content}
+                                                        <div className="prose prose-invert prose-xs max-w-none prose-p:my-0.5 prose-headings:text-gray-100 prose-headings:font-semibold prose-code:bg-black/20 prose-code:px-1 prose-code:rounded prose-pre:bg-black/20 prose-pre:border prose-pre:border-white/10 prose-a:text-indigo-300 prose-li:my-0">
+                                                            <Markdown>{c.content}</Markdown>
+                                                        </div>
                                                         {(isOwn || myProjectRole === 'Owner') && (
                                                             <div className="absolute -bottom-4 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 {isOwn && (
