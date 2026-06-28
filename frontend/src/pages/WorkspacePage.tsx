@@ -234,7 +234,7 @@ export default function WorkspacePage() {
                 <div ref={setNodeRef} className="flex flex-col gap-2 p-2 overflow-y-auto flex-1 min-h-[60px]">
                     {columnIssues.map(issue => <DraggableCard key={issue.id} issue={issue} />)}
                     {columnIssues.length === 0 && (
-                        <p className="text-gray-700 text-xs text-center py-4">No issues</p>
+                        <p className="text-gray-700 text-[10px] text-center py-6 select-none">Drop here</p>
                     )}
                 </div>
             </div>
@@ -280,46 +280,68 @@ export default function WorkspacePage() {
 
                     <IssueFilters filters={filters} onChange={handleFiltersChange} members={projectMembers} className="flex gap-2 min-w-0" />
 
+                    {view === 'list' && issues.length > 0 && (
+                        <select
+                            value={sortBy}
+                            onChange={e => handleSortChange(e.target.value)}
+                            className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500 shrink-0"
+                        >
+                            <option value="createdDesc">Created ↓</option>
+                            <option value="createdAsc">Created ↑</option>
+                            <option value="updatedDesc">Updated ↓</option>
+                            <option value="updatedAsc">Updated ↑</option>
+                            <option value="priorityDesc">Priority ↓</option>
+                            <option value="priorityAsc">Priority ↑</option>
+                        </select>
+                    )}
                 </div>
 
                 {view === 'list' ? (
                     <>
-                        {/* Sort row — list only */}
-                        <div className="flex justify-end mb-1">
-                            <select
-                                value={sortBy}
-                                onChange={e => handleSortChange(e.target.value)}
-                                className="bg-[#1e1f27] border border-gray-700 text-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500 shrink-0"
-                            >
-                                <option value="createdDesc">Created ↓</option>
-                                <option value="createdAsc">Created ↑</option>
-                                <option value="updatedDesc">Updated ↓</option>
-                                <option value="updatedAsc">Updated ↑</option>
-                                <option value="priorityDesc">Priority ↓</option>
-                                <option value="priorityAsc">Priority ↑</option>
-                            </select>
-                        </div>
 
                         {/* Issue list — scrollable */}
                         <div className="flex flex-col gap-1.5 overflow-y-auto flex-1">
-                            {filteredIssues.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE).map(issue => (
-                                <button
-                                    key={issue.id}
-                                    onClick={() => setSelectedIssue(issue)}
-                                    className={`bg-[#1e1f27] border rounded-lg px-4 py-2.5 transition-colors text-left flex items-center justify-between gap-4 ${selectedIssue?.id === issue.id ? 'border-indigo-500' : 'border-gray-700 hover:border-indigo-500'}`}
-                                >
-                                    <p className="text-white text-xs font-medium truncate flex-1">{issue.title}</p>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        {issue.assignedToName && (
-                                            <div title={issue.assignedToName} className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-medium" style={{ backgroundColor: colorByName[issue.assignedToName] ?? '#6366f1' }}>
-                                                {issue.assignedToName[0].toUpperCase()}
-                                            </div>
-                                        )}
-                                        <StatusBadge status={issue.status} />
-                                        <PriorityBadge priority={issue.priority} />
-                                    </div>
-                                </button>
-                            ))}
+                            {issues.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
+                                    <p className="text-gray-500 text-sm font-medium">No issues yet</p>
+                                    <p className="text-gray-600 text-xs">Create the first issue to get started</p>
+                                    <button
+                                        onClick={() => setCreateExpanded(true)}
+                                        className="mt-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors"
+                                    >
+                                        + Create issue
+                                    </button>
+                                </div>
+                            ) : filteredIssues.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center flex-1 gap-2 py-16 text-center">
+                                    <p className="text-gray-500 text-sm font-medium">No issues match your filters</p>
+                                    <button
+                                        onClick={() => handleFiltersChange({ searchTerm: '', statuses: [], priorities: [], assignees: [] })}
+                                        className="text-indigo-400 hover:text-indigo-300 text-xs transition-colors"
+                                    >
+                                        Clear filters
+                                    </button>
+                                </div>
+                            ) : (
+                                filteredIssues.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE).map(issue => (
+                                    <button
+                                        key={issue.id}
+                                        onClick={() => setSelectedIssue(issue)}
+                                        className={`bg-[#1e1f27] border rounded-lg px-4 py-2.5 transition-colors text-left flex items-center justify-between gap-4 ${selectedIssue?.id === issue.id ? 'border-indigo-500' : 'border-gray-700 hover:border-indigo-500'}`}
+                                    >
+                                        <p className="text-white text-xs font-medium truncate flex-1">{issue.title}</p>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {issue.assignedToName && (
+                                                <div title={issue.assignedToName} className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-medium" style={{ backgroundColor: colorByName[issue.assignedToName] ?? '#6366f1' }}>
+                                                    {issue.assignedToName[0].toUpperCase()}
+                                                </div>
+                                            )}
+                                            <StatusBadge status={issue.status} />
+                                            <PriorityBadge priority={issue.priority} />
+                                        </div>
+                                    </button>
+                                ))
+                            )}
                         </div>
 
                         {/* Pagination */}
@@ -385,13 +407,46 @@ export default function WorkspacePage() {
                                     </div>
                                 </button>
                             ))}
-                            {filteredIssues.filter(i => i.status === kanbanTab).length === 0 && (
-                                <p className="text-gray-700 text-xs text-center py-8">No issues</p>
+                            {issues.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
+                                    <p className="text-gray-500 text-sm font-medium">No issues yet</p>
+                                    <button onClick={() => setCreateExpanded(true)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors">
+                                        + Create issue
+                                    </button>
+                                </div>
+                            ) : filteredIssues.filter(i => i.status === kanbanTab).length === 0 && (
+                                <p className="text-gray-600 text-xs text-center py-8">
+                                    {filteredIssues.length === 0 ? (
+                                        <button onClick={() => handleFiltersChange({ searchTerm: '', statuses: [], priorities: [], assignees: [] })} className="text-indigo-400 hover:text-indigo-300 transition-colors">Clear filters</button>
+                                    ) : 'No issues here'}
+                                </p>
                             )}
                         </div>
 
+                        {/* Desktop kanban empty state */}
+                        {issues.length === 0 && (
+                            <div className="hidden sm:flex flex-col items-center justify-center flex-1 gap-3 text-center">
+                                <p className="text-gray-500 text-sm font-medium">No issues yet</p>
+                                <p className="text-gray-600 text-xs">Create the first issue to get started</p>
+                                <button
+                                    onClick={() => setCreateExpanded(true)}
+                                    className="mt-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors"
+                                >
+                                    + Create issue
+                                </button>
+                            </div>
+                        )}
+                        {issues.length > 0 && filteredIssues.length === 0 && (
+                            <div className="hidden sm:flex flex-col items-center justify-center flex-1 gap-2 text-center">
+                                <p className="text-gray-500 text-sm font-medium">No issues match your filters</p>
+                                <button onClick={() => handleFiltersChange({ searchTerm: '', statuses: [], priorities: [], assignees: [] })} className="text-indigo-400 hover:text-indigo-300 text-xs transition-colors">
+                                    Clear filters
+                                </button>
+                            </div>
+                        )}
+
                         {/* Desktop: all columns side by side */}
-                        <div className="hidden sm:flex gap-3 overflow-x-auto flex-1 pb-1">
+                        <div className={`hidden sm:flex gap-3 overflow-x-auto flex-1 pb-1 ${issues.length === 0 || filteredIssues.length === 0 ? 'sm:hidden' : ''}`}>
                             {(['Open', 'InProgress', 'Review', 'Closed'] as const).map(status => {
                                 const labels: Record<string, string> = { Open: 'Open', InProgress: 'In Progress', Review: 'Review', Closed: 'Closed' };
                                 return <DroppableColumn key={status} status={status} label={labels[status]} columnIssues={filteredIssues.filter(i => i.status === status)} />;
