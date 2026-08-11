@@ -9,11 +9,14 @@ A fullstack project and issue tracking application — built as a school project
 ## Features
 
 - Create and manage projects with team members
-- Track issues with status, priority, and assignee
+- Track issues with status, priority, and assignee — list and Kanban board views
 - Role-based access control per project (Owner / Developer / Reporter)
-- Comment on issues
+- Comment on issues, with full Markdown support for descriptions and comments
+- In-app notifications (invites, assignments, new comments) with unread badge and inline accept/decline
 - Invite team members via username search
 - Admin dashboard for user and project management
+- "Copy AI prompt" — one click copies a structured summary of an issue (title, status, priority, description, comments) for use with any AI assistant
+- Empty states for projects/filters with no matching issues
 - Fully responsive — works on desktop and mobile
 
 ## Tech Stack
@@ -23,6 +26,8 @@ A fullstack project and issue tracking application — built as a school project
 - Vite
 - Tailwind CSS
 - React Router
+- react-markdown (Markdown rendering)
+- dnd-kit (Kanban drag-and-drop)
 
 **Backend**
 - ASP.NET Core Web API (.NET 10)
@@ -53,17 +58,19 @@ There is also a global `Admin` role for platform-level management (user CRUD, de
 /
 ├── frontend/          # React app
 │   └── src/
+│       ├── api/
 │       ├── components/
 │       ├── context/
 │       ├── pages/
-│       └── services/
+│       └── types/
 └── backend/
     └── BugBase.Api/   # ASP.NET Core Web API
         ├── Controllers/
         ├── Services/
         ├── Models/
         ├── DTOs/
-        └── Data/
+        ├── Data/
+        └── Migrations/
 ```
 
 ## Running Locally
@@ -123,11 +130,12 @@ The app runs at `http://localhost:5173`.
 | Resource | Endpoints |
 |---|---|
 | Auth | `POST /api/auth/register`, `POST /api/auth/login` |
-| Projects | `GET/POST /api/project`, `PUT/DELETE /api/project/{id}` |
+| Projects | `GET/POST /api/project`, `PUT/DELETE /api/project/{id}`, `GET /api/project/admin/all` |
 | Issues | `GET/POST /api/issue`, `PUT/DELETE /api/issue/{id}` |
 | Comments | `GET/POST /api/comment`, `PUT/DELETE /api/comment/{id}` |
-| Invitations | `POST /api/invitation`, `PUT /api/invitation/{id}/accept` |
-| Users | `GET /api/user`, `PUT /api/user/profile`, `DELETE /api/user` |
+| Invitations | `POST /api/invitation`, `PUT /api/invitation/{id}/accept`, `PUT /api/invitation/{id}/decline` |
+| Notifications | `GET /api/notification`, `PUT /api/notification/{id}/read`, `PUT /api/notification/read-all` |
+| Users | `GET /api/user`, `GET /api/user/me`, `PUT /api/user/profile`, `DELETE /api/user/profile` |
 
 ## License
 
