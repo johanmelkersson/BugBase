@@ -160,6 +160,29 @@ export default function WorkspacePage() {
         setEditingCommentId(null);
     }
 
+    const [copied, setCopied] = useState(false);
+
+    function handleCopyPrompt() {
+        if (!selectedIssue) return;
+        const commentBlock = comments.length > 0
+            ? `\n\n## Comments\n${comments.map(c => `**${c.authorName ?? 'Deleted user'}:** ${c.content}`).join('\n\n')}`
+            : '';
+        const prompt = `You are assisting with a software project called "${selectedProject?.name}".
+
+## Issue: ${selectedIssue.title}
+**Status:** ${selectedIssue.status} | **Priority:** ${selectedIssue.priority}${selectedIssue.assignedToName ? ` | **Assigned to:** ${selectedIssue.assignedToName}` : ''}${selectedIssue.reportedByName ? ` | **Reported by:** ${selectedIssue.reportedByName}` : ''}
+
+## Description
+${selectedIssue.description || '(no description)'}${commentBlock}
+
+---
+Please analyse this issue and suggest concrete next steps. Consider possible root causes, approaches to investigate or resolve it, and any questions that need clarification.`;
+
+        navigator.clipboard.writeText(prompt);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
+
     async function handleCreateComment(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!selectedIssue || !commentText.trim()) return;
@@ -611,6 +634,13 @@ export default function WorkspacePage() {
                                 <div className="flex items-center gap-2 ml-2 shrink-0">
                                     {canEditIssueText && <button onClick={handleStartEdit} className="text-gray-500 hover:text-white text-xs">Edit</button>}
                                     {canEditIssueText && <button onClick={handleDeleteIssue} className="text-gray-500 hover:text-red-400 text-xs">Delete</button>}
+                                    <button
+                                        onClick={handleCopyPrompt}
+                                        title="Copy AI prompt"
+                                        className="text-gray-500 hover:text-indigo-400 text-xs transition-colors"
+                                    >
+                                        {copied ? '✓' : 'AI'}
+                                    </button>
                                     <button onClick={() => setSelectedIssue(null)} className="text-gray-500 hover:text-white text-xs">✕</button>
                                 </div>
                             )}

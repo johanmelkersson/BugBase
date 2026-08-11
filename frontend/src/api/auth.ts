@@ -6,6 +6,7 @@ export interface AuthResponse {
   role: string;
   email: string;
   currentProjectId: number | null;
+  color: string;
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
